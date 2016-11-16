@@ -146,6 +146,11 @@ def main():
                              action='store_true',
                              help='Do not load GERP scores at base pair resolution. Loaded by default.',
                              default=False)
+    parser_load.add_argument('--cnv',
+                            dest='cnv',
+                            action='store_true',
+                            help='Load a VCF file with CNV',
+                            default=False)
     parser_load.add_argument('--skip-cadd',
                              dest='skip_cadd',
                              action='store_true',

@@ -260,6 +260,18 @@ def create_tables(path, effect_fields=None):
     exac_num_chroms int,
     %s""" % effect_string.rstrip(","),
 
+    variants_cnv = """
+    chrom varchar(15),
+    start integer,
+    end integer,
+    sv_length integer,
+    variant_id integer,
+    ref text,
+    alt text,
+    type varchar(15),
+    sub_type text,
+    """,
+
     variant_impacts="""
     variant_id integer,
     anno_id integer,
@@ -426,6 +438,32 @@ def insert_variation(session, metadata, buffer):
             for b in buffer:
                 trans.execute(stmt, b)
         raise
+
+def insert_variation_cnv(session, metadata, buffer):
+    """
+    Populate the CNV variants table with each variant in the buffer.
+    """
+    if len(buffer) == 0: return
+    tbl = metadata.tables['variants_cnv']
+
+    cols = _get_cols(tbl)
+
+    left = set(cols) - set(buffer[0].keys())
+    assert len(left) == 0, left
+    left = set(buffer[0].keys()) - set(cols)
+    assert len(left) == 0, left
+
+    try:
+        session.execute(tbl.insert(), buffer)
+        session.commit()
+    except:
+        sys.stderr.write("insert error trying 1 at a time:\n")
+        session.rollback()
+        stmt = tbl.insert()
+        with session.bind.begin() as trans:
+            for b in buffer:
+                trans.execute(stmt, b)
+            raise
 
 
 def insert_variation_impacts(session, metadata, buffer):

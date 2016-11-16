@@ -209,7 +209,10 @@ class GeminiLoader(object):
 
             # buffer full - time to insert into DB
             if len(self.var_buffer) >= self.buffer_size:
-                database.insert_variation(self.c, self.metadata, self.var_buffer)
+                if self.args.cnv == True:
+                    database.insert_variation_cnv(self.c, self.metadata, self.var_buffer)
+                else:
+                    database.insert_variation(self.c, self.metadata, self.var_buffer)
 
                 sys.stderr.write("pid " + str(os.getpid()) + ": " +
                                  str(self.counter) + " variants processed.\n")
@@ -225,7 +228,10 @@ class GeminiLoader(object):
         # final load to the database
         self.v_id -= 1
         if self.var_buffer:
-            database.insert_variation(self.c, self.metadata, self.var_buffer)
+            if self.args.cnv == True:
+                database.insert_variation_cnv(self.c, self.metadata, self.var_buffer)
+            else:
+                database.insert_variation(self.c, self.metadata, self.var_buffer)
             database.insert_variation_impacts(self.c, self.metadata, self.var_impacts_buffer)
             sys.stderr.write("pid " + str(os.getpid()) + ": " +
                              str(self.counter) + " variants processed.\n")
@@ -540,7 +546,17 @@ class GeminiLoader(object):
                     extra_fields[dbkey] = float(extra_fields[dbkey])
         # construct the core variant record.
         # 1 row per variant to VARIANTS table
-        variant = dict(chrom=chrom, start=var.start, end=var.end,
+        if self.args.cnv==True:
+            alt_str = ",".join([x or "" for x in var.ALT])
+            if "<" in alt_str or ">" in alt_str:
+                alt_str = alt_str[1:-1]
+
+            variant = dict(chrom=chrom, start=var.start, end=var.end,
+                    sv_length=var.INFO["SVLEN"],variant_id=self.v_id,
+                    ref=var.REF,alt=alt_str,type=var.var_type,
+                    sub_type=var.var_subtype)
+        else:
+            variant = dict(chrom=chrom, start=var.start, end=var.end,
                    vcf_id=vcf_id, variant_id=self.v_id, anno_id=top_impact.anno_id,
                    ref=var.REF, alt=','.join([x or "" for x in var.ALT]),
                    qual=var.QUAL, filter=filter, type=var.var_type,
@@ -667,7 +683,7 @@ class GeminiLoader(object):
                    exac_num_hom_alt=Exac.num_hom_alt,
                    exac_num_chroms=Exac.num_chroms)
 
-        variant['max_aaf_all'] = max(-1,
+            variant['max_aaf_all'] = max(-1,
                                      variant['aaf_esp_ea'],
                                      variant['aaf_esp_aa'],
                                      variant['aaf_1kg_amr'],
@@ -681,7 +697,7 @@ class GeminiLoader(object):
                                      variant['aaf_adj_exac_nfe'],
                                      variant['aaf_adj_exac_sas'])
 
-        variant.update(self._extra_empty)
+            variant.update(self._extra_empty)
         return variant, variant_impacts, extra_fields
 
     def _prepare_samples(self):
