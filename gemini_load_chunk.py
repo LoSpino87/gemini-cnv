@@ -26,6 +26,7 @@ from gemini_constants import *
 from compression import pack_blob
 from gemini.config import read_gemini_config
 import dgv_table
+import gemini_browser
 
 class empty(object):
     def __getattr__(self, key):
@@ -132,6 +133,7 @@ class GeminiLoader(object):
         if self.args.dgv_cnvmap is not None:
             file_dgv = self.args.dgv_cnvmap
             self._get_dgv_map(file_dgv)
+            database.insert_resources(self.c,self.metadata, {('dgv_cnvmap',str(file_dgv))})
 
     def store_vcf_header(self):
         """Store the raw VCF header.

@@ -21,5 +21,5 @@ def db_info(parser, args):
 
         # header
     print out_template.format("table_name", "column_name", "type")
-    for table in ['variants', 'variant_impacts', 'samples', 'gene_detailed', 'gene_summary']:
+    for table in ['variants','variants_cnv', 'variant_impacts', 'samples', 'gene_detailed', 'gene_summary','dgv_map']:
         get_table_info(metadata, table, out_template)
