@@ -198,6 +198,9 @@ def main():
                          action='store_true',
                          help='Load in test mode (faster)',
                          default=False)
+    parser_load.add_argument('--dgv_cnvmap',
+                            dest = 'dgv_cnvmap',
+                            help = 'Load CNVmap from DGV database')
     def load_fn(parser, args):
         import gemini_load
         gemini_load.load(parser, args)

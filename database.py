@@ -44,6 +44,9 @@ def index_variation(cursor):
     cursor.execute('''create index chrom_varid_idx on variants(chrom,variant_id)''')
     cursor.execute('CREATE index max_aaf_all_idx on variants(max_aaf_all)')
 
+def index_variation_cnv(cursor):
+    cursor.execute('''create index var_cnv_idx on variants_cnv(variant_id,chrom,start,end)''')
+
 def index_variation_impacts(cursor):
     cursor.execute('''create index varimp_exonic_idx on \
                       variant_impacts(is_exonic)''')
@@ -88,6 +91,7 @@ def create_indices(cursor):
     index_samples(cursor)
     index_gene_detailed(cursor)
     index_gene_summary(cursor)
+    index_variation_cnv(cursor)
 
 
 def get_path(path):
@@ -261,16 +265,16 @@ def create_tables(path, effect_fields=None):
     %s""" % effect_string.rstrip(","),
 
     variants_cnv = """
+    variant_id integer,
     chrom varchar(15),
     start integer,
     end integer,
     sv_length integer,
-    variant_id integer,
     ref text,
     alt text,
     type varchar(15),
     sub_type text,
-    """,
+    %s""" % effect_string.rstrip(","),
 
     variant_impacts="""
     variant_id integer,
@@ -348,7 +352,32 @@ def create_tables(path, effect_fields=None):
     in_cosmic_census bool,
     """,
 
-    vcf_header="""vcf_header text""")
+    vcf_header="""vcf_header text""",
+
+    dgv_map="""
+    uid integer,
+    chr text,
+    start integer,
+    end integer,
+    state text,
+    id text,
+    type text,
+    num_variants integer,
+    num_samples integer,
+    num_samples_multicounted integer,
+    num_studies integer,
+    variants text,
+    samples text,
+    studies text,
+    African integer,
+    Asian integer,
+    European integer,
+    Mexican integer,
+    Middle_east integer,
+    Native_american integer,
+    Oceania integer,
+    South_american integer,"""
+    )
 
     # in the future this will be replaced by reading from the conf file.
 
@@ -542,6 +571,17 @@ def insert_version(session, metadata, version):
     session.execute(t.insert(), dict(version=version))
     session.commit()
 
+def gen_dgvmap(cols,table_contents):
+    for row in table_contents:
+        d = dict(zip(cols,row))
+        yield d
+
+def insert_dgv_map(session, metadata, dgvmap):
+    """Populate table of DGVmap with selected map"""
+    t = metadata.tables['dgv_map']
+    cols = _get_cols(t)
+    session.execute(t.insert(),list(gen_dgvmap(cols, dgvmap)))
+    session.commit()
 
 def close_and_commit(session):
     """

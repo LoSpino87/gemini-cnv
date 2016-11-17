@@ -318,6 +318,7 @@ def load_chunks_ipython(grabix_file, args, view):
                  "tempdir": tempdir,
                  "chunk_dir": chunk_dir,
                  "vcf": vcf,
+                 "dgv_file": dgv_cnvmap,
                  "grabix_file": grabix_file,
                  "no_genotypes": no_genotypes,
                  "no_load_genotypes": no_load_genotypes,
@@ -355,7 +356,7 @@ def cleanup_temp_db_files(chunk_dbs):
 
 def gemini_pipe_load_cmd():
     grabix_cmd = "grabix grab {grabix_file} {start} {stop}"
-    gemini_load_cmd = ("gemini load_chunk -v - {anno_type} {ped_file}"
+    gemini_load_cmd = ("gemini load_chunk -v - {anno_type} {dgv_file} {ped_file}"
                        " {no_load_genotypes} {no_genotypes}"
                        " {skip_gerp_bp} {skip_gene_tables} {skip_cadd}"
                        " {passonly} {skip_info_string} {test_mode} {tempdir}"

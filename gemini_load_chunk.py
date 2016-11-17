@@ -25,6 +25,7 @@ import structural_variants as svs
 from gemini_constants import *
 from compression import pack_blob
 from gemini.config import read_gemini_config
+import dgv_table
 
 class empty(object):
     def __getattr__(self, key):
@@ -127,6 +128,10 @@ class GeminiLoader(object):
 
         self.buffer_size = buffer_size
         self._get_anno_version()
+
+        if self.args.dgv_cnvmap is not None:
+            file_dgv = self.args.dgv_cnvmap
+            self._get_dgv_map(file_dgv)
 
     def store_vcf_header(self):
         """Store the raw VCF header.
@@ -551,8 +556,8 @@ class GeminiLoader(object):
             if "<" in alt_str or ">" in alt_str:
                 alt_str = alt_str[1:-1]
 
-            variant = dict(chrom=chrom, start=var.start, end=var.end,
-                    sv_length=var.INFO["SVLEN"],variant_id=self.v_id,
+            variant = dict(variant_id=self.v_id, chrom=chrom, start=var.start,
+                    end=var.end, sv_length=var.INFO["SVLEN"],
                     ref=var.REF,alt=alt_str,type=var.var_type,
                     sub_type=var.var_subtype)
         else:
@@ -789,6 +794,32 @@ class GeminiLoader(object):
                     contents = []
 
         database.insert_gene_summary(self.c, self.metadata, contents)
+
+    def _get_dgv_map(self,file_dgv):
+        """
+        Define a DGVmap table
+        """
+        #unique identifier for each entry
+        i = 0
+        contents = dgv_map_c = []
+
+        with open(file_dgv,'r') as f:
+            next(f)
+            for line in f:
+                col = line.strip().split("\t")
+                table = dgv_table.dgv_map(col)
+                i += 1
+                dgv_map_c = [str(i), table.chr, table.start, table.end, table.state, table.id,
+                    table.type, table.num_variants, table.num_samples,
+                    table.num_samples_multicounted,table.num_studies, table.variants, table.samples,
+                    table.studies, table.African, table.Asia, table.European, table.Mexican,
+                    table.Middle_East, table.Native_American, table.Oceania,table.South_American]
+                contents.append(dgv_map_c)
+                if i % 1000 == 0:
+                    database.insert_dgv_map(self.c,self.metadata, contents)
+                    contents = []
+            database.insert_dgv_map(self.c, self.metadata, contents)
+
 
     def update_gene_table(self):
         """
