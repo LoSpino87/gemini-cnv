@@ -1209,6 +1209,27 @@ def main():
     parser_qc.set_defaults(func=qc_fn)
 
     #######################################################
+    # gemini overlap
+    #######################################################
+
+    parser_overlap = subparsers.add_parser('overlap',
+            help = 'Overlap tools with DGV map')
+    parser_overlap.add_argument('db',
+            metavar = 'db',
+            help = 'The name of the database over run overlap.')
+    parser_overlap.add_argument('-f',
+            dest = 'f_par',
+            help = 'Minimum overlap fraction.')
+    parser_overlap.add_argument('-r',
+            action = 'store_true',
+            help = 'Reciprocal')
+
+    def overlap_fn(parser,args):
+	    from tool_overlap import run
+	    run(parser,args)
+    parser_overlap.set_defaults(func=overlap_fn)
+
+    #######################################################
     # parse the args and call the selected function
     #######################################################
     import operator

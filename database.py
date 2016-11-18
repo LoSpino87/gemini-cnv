@@ -376,7 +376,24 @@ def create_tables(path, effect_fields=None):
     Middle_east integer,
     Native_american integer,
     Oceania integer,
-    South_american integer,"""
+    South_american integer,""",
+
+    overlap = """
+    uid integer,
+    chrom_A text,
+    start_A integer,
+    end_A integer,
+    len_A integer,
+    overlap_A_perc float,
+    alt_A text,
+    chrom_B text,
+    start_B integer,
+    end_B integer,
+    len_B integer,
+    overlap_B_perc float,
+    type_B text,
+    overlap_bp integer,
+    jaccard_index float,"""
     )
 
     # in the future this will be replaced by reading from the conf file.
@@ -581,6 +598,18 @@ def insert_dgv_map(session, metadata, dgvmap):
     t = metadata.tables['dgv_map']
     cols = _get_cols(t)
     session.execute(t.insert(),list(gen_dgvmap(cols, dgvmap)))
+    session.commit()
+
+def insert_overlap(session, metadata, overlap):
+    """Populate overlap results"""
+    t = metadata.tables['overlap']
+    cols = _get_cols(t)
+    session.execute(t.insert(), list(gen_dgvmap(cols, overlap)))
+    session.commit()
+
+def empty_overlap_table(session,metadata):
+    t = metadata.tables['overlap']
+    session.execute(t.delete())
     session.commit()
 
 def close_and_commit(session):
