@@ -4,6 +4,7 @@ import webbrowser
 from collections import namedtuple
 
 import GeminiQuery
+import tool_overlap
 
 import GeminiQuery
 from gemini.gim import (AutoDom, AutoRec, DeNovo, MendelViolations, CompoundHet)
@@ -174,7 +175,9 @@ class Arguments(object):
     """
     _opts = ("columns", "db", "filter", "min_kindreds", "families",
                  "pattern_only", "max_priority", # only for compound_het
-                 "allow_unaffected", "min_gq", "lenient", "min_sample_depth")
+                 "allow_unaffected", "min_gq", "lenient", "min_sample_depth"
+                 "f" # only for overlap
+                 )
     def __init__(self, **kwargs):
         if not "min_gq" in kwargs: kwargs['min_gq'] = 0
         if not "lenient" in kwargs: kwargs['lenient'] = False
@@ -189,6 +192,8 @@ class Arguments(object):
             if not k in kwargs: kwargs[k] = False
         if not "columns" in kwargs:
             kwargs['columns'] = ",".join(default_cols)
+        if not "f_par" in kwargs: kwargs['f_par'] = None
+        if not 'r' in kwargs: kwargs['r']=None
         self.__dict__.update(**kwargs)
 
 
@@ -245,6 +250,56 @@ def auto_dom():
 @app.route('/db_schema', method='GET')
 def db_schema():
     return template('db_schema.j2')
+
+
+@app.route('/overlap', method='GET')
+def overlap():
+    q_name = "SELECT resource FROM resources WHERE name='dgv_cnvmap'"
+    nm = GeminiQuery.GeminiQuery(database)
+    nm.run(q_name)
+    for n in nm:
+        name = n
+
+    # user clicked the "submit" button
+    if request.GET.get('submit', '').strip():
+
+        f_str = str(request.GET.get('f').strip())
+        reciprocal = request.GET.get('reciprocal')
+        if reciprocal == None:
+             args = Arguments(db=database, f_par = f_str)
+        else:
+            args = Arguments(db=database, f_par = f_str, r = True)
+
+        tool_overlap.overlap(args)
+        query_all = "SELECT * FROM overlap"
+        over = GeminiQuery.GeminiQuery(database)
+        over._set_gemini_browser(True)
+        over.run(query_all)
+
+        return template('overlap.j2', dbfile=database, rows=over, maps_name = name, f = f_str)
+
+
+    # user clicked the "save as a text file" button
+    elif request.GET.get('save', '').strip():
+
+        f_str = str(request.GET.get('f').strip())
+        reciprocal = request.GET.get('reciprocal')
+
+        tmp_file = 'overlap_result.txt'
+        tmp = open(tmp_file, 'w')
+        tmp.write('#uid\tchrom_A\tstart_A\tend_A\tlen_A\toverlap_A[%]\talt_A\tchrom_B\tstart_B\tend_B\tlen_B\toverlap_B[%]\ttype_B\toverlap[bp]\tjaccard_index'+'\n')
+
+        query_all = "SELECT * from overlap"
+        result = GeminiQuery.GeminiQuery(database)
+        result._set_gemini_browser(True)
+        result.run(query_all)
+
+        for row in result:
+            tmp.write(str(row)+'\n')
+        tmp.close()
+        return template('overlap.j2', dbfile=database, rows=result, maps_name = name,f = f_str, r = reciprocal)
+    else:
+        return template('overlap.j2', dbfile=database, maps_name = name)
 
 
 ## Switch between the different available browsers
