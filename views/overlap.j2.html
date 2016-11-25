@@ -18,25 +18,39 @@
 			</div>
 		</div>
 		<hr>
+		<strong>Minimum overlap required as a fraction of A. Default is 1E-9 (i.e. 1bp).</strong>
 		<div class="control-group">
-			<label class="control-label" for="query">
-				<strong>Minimum overlap required as a fraction of A. Default is 1E-9 (i.e. 1bp).</strong>
-			</label>
+				<label class="control-label" for="query">
+					<textarea rows="1" type="text" name="f", >{{f}}</textarea>
+				</label>
 		</div>
 		<div class="control-group">
-      <textarea rows="1" class="span6" type="text" name="f", >{{f}}</textarea>
-			<label class="checkbox">
-				<input type="checkbox" name = "reciprocal" value ={{reciprocal}} > Reciprocal
-        <br>
-				<strong>Note:</strong><em>  If checked, you must include a minimum overlap fraction</em>
-			</label>
+				<label class="checkbox" {display: inline-block};>
+					<input type="checkbox" name = "reciprocal"> Reciprocal
+        	<br>
+					<strong>Note:</strong><em>  If checked, you must include a minimum overlap fraction</em>
+				</label>
+		</div>
+<hr>
+
+		<div>
+			<strong>Filter the overlap interval by length (min,max or a range)</strong>
+			<table>
+				<td><textarea rows="1" type="text" name="int_len_min" >{{int_len_min}}</textarea></td>
+				<td><textarea rows="1" type="text" name="int_len_max" >{{int_len_max}}</textarea></td>
+			</table>
 		</div>
 
- 		<div class="control-group">
+		<div>
+			<strong>or by alteration [DUP/DEL]</strong><br>
+			<textarea rows="1" type="text" name="alt_par" >{{alt_par}}</textarea>
+		</div>
+
+		<div class="control-group">
  			<div class="controls">
  				<button type="submit" class="btn btn-large btn-primary" name="submit" value="submit">Submit</button>
 				<button type="submit" class="btn btn-large btn-success" name="save" value="save">Save as text file</button>
-			</div> <!-- end of debug-pane -->
+			</div>
 		</div>
 	</form>
 

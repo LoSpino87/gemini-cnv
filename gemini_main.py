@@ -4,6 +4,7 @@ import sys
 import tempfile
 import argparse
 import gemini.version
+import math
 
 def add_inheritance_args(parser, min_kindreds=1, depth=True, gt_ll=False,
         allow_unaffected=True, lenient=True, gq=True):
@@ -1223,6 +1224,16 @@ def main():
     parser_overlap.add_argument('-r',
             action = 'store_true',
             help = 'Reciprocal')
+    parser_overlap.add_argument('-alt',
+            dest = 'alt_par',
+            help = 'Overlap only DUP or DEL variants')
+    parser_overlap.add_argument('-len_min',
+            dest = 'int_len_min',
+            default = 0,
+            help = 'Minimum length of intersec')
+    parser_overlap.add_argument('-len_max',
+            dest = 'int_len_max',
+            help = 'Maximum length of intersec')
 
     def overlap_fn(parser,args):
 	    from tool_overlap import run

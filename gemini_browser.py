@@ -194,6 +194,9 @@ class Arguments(object):
             kwargs['columns'] = ",".join(default_cols)
         if not "f_par" in kwargs: kwargs['f_par'] = None
         if not 'r' in kwargs: kwargs['r']=None
+        if not 'alt_par' in kwargs: kwargs['alt_par'] = None
+        if not 'int_len_min' in kwargs: kwargs['int_len_min'] = None
+        if not 'int_len_max' in kwargs: kwargs['int_len_max'] = None
         self.__dict__.update(**kwargs)
 
 
@@ -264,11 +267,14 @@ def overlap():
     if request.GET.get('submit', '').strip():
 
         f_str = str(request.GET.get('f').strip())
-        reciprocal = request.GET.get('reciprocal')
-        if reciprocal == None:
-             args = Arguments(db=database, f_par = f_str)
+        recip = request.GET.get('reciprocal')
+        len_min = str(request.GET.get('int_len_min').strip())
+        len_max = str(request.GET.get('int_len_max').strip())
+        alt = str(request.GET.get('alt_par').strip())
+        if recip == None:
+            args = Arguments(db=database, f_par = f_str, int_len_min = len_min, int_len_max = len_max, alt_par=alt)
         else:
-            args = Arguments(db=database, f_par = f_str, r = True)
+            args = Arguments(db=database, f_par = f_str, r = True, int_len_min = len_min, int_len_max = len_max, alt_par=alt)
 
         tool_overlap.overlap(args)
         query_all = "SELECT * FROM overlap"
@@ -276,14 +282,17 @@ def overlap():
         over._set_gemini_browser(True)
         over.run(query_all)
 
-        return template('overlap.j2', dbfile=database, rows=over, maps_name = name, f = f_str)
+        return template('overlap.j2', dbfile=database, rows=over, maps_name = name, f = f_str, int_len_min = len_min, int_len_max = len_max, alt_par=alt, reciprocal = recip)
 
 
     # user clicked the "save as a text file" button
     elif request.GET.get('save', '').strip():
 
         f_str = str(request.GET.get('f').strip())
-        reciprocal = request.GET.get('reciprocal')
+        recip = request.GET.get('reciprocal')
+        len_min = str(request.GET.get('int_len_min').strip())
+        len_max = str(request.GET.get('int_len_max').strip())
+        alt = str(request.GET.get('alt_par').strip())
 
         tmp_file = 'overlap_result.txt'
         tmp = open(tmp_file, 'w')
@@ -297,7 +306,7 @@ def overlap():
         for row in result:
             tmp.write(str(row)+'\n')
         tmp.close()
-        return template('overlap.j2', dbfile=database, rows=result, maps_name = name,f = f_str, r = reciprocal)
+        return template('overlap.j2', dbfile=database, rows=result, maps_name = name,f = f_str, r = reciprocal, int_len_min = len_min, int_len_max = len_max, alt_par=alt)
     else:
         return template('overlap.j2', dbfile=database, maps_name = name)
 
