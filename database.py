@@ -384,16 +384,26 @@ def create_tables(path, effect_fields=None):
     start_A integer,
     end_A integer,
     len_A integer,
-    overlap_A_perc float,
+    overlap_A_perc text,
     alt_A text,
     chrom_B text,
     start_B integer,
     end_B integer,
     len_B integer,
-    overlap_B_perc float,
+    overlap_B_perc text,
     type_B text,
     overlap_bp integer,
-    jaccard_index float,"""
+    jaccard_index float,
+    num_variants integer,
+    num_samples integer,
+    African integer,
+    Asian integer,
+    European integer,
+    Mexican integer,
+    Middle_east integer,
+    Native_american integer,
+    Oceania integer,
+    South_american integer,"""
     )
 
     # in the future this will be replaced by reading from the conf file.

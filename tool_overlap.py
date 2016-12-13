@@ -41,7 +41,7 @@ def overlap(args):
 
 
 	# extract data from dgv_map table and create relative BED object
-	args.query = 'select chr, start, end, type from dgv_map'
+	args.query = 'select chr,start,end,type,num_variants,num_samples,African,Asian,European,Mexican,Middle_east,Native_american,Oceania,South_american from dgv_map'
 	CNV = GeminiQuery.GeminiQuery(args.db)
 	CNV.run(args.query)
 	cnv_string = ""
@@ -62,18 +62,18 @@ def overlap(args):
 	#show result
 	var_and_cnv_b = []
 	for row in var_and_cnv:
-		inter_overlap = int(row[8])+1
+		inter_overlap = int(row[18])+1
 		length_A = int(row[2])-int(row[1])+1
 		length_B = int(row[6])-int(row[5])+1
-		perc_A = round(float(inter_overlap)/length_A*100,1)
-		if perc_A == 100.0: perc_A = 100
-		if perc_A == 0.0: perc_A = '<0.1'
-		perc_B = round(float(inter_overlap)/length_B*100,1)
-		if perc_B == 100.0: perc_B = 100
-		if perc_B == 0.0: perc_B = '<0.1'
+		perc_A = str(round(float(inter_overlap)/length_A*100,1))
+		if perc_A == '100.0': perc_A = '100'
+		if perc_A == '0.0': perc_A = '<0.1'
+		perc_B = str(round(float(inter_overlap)/length_B*100,1))
+		if perc_B == '100.0': perc_B = '100'
+		if perc_B == '0.0': perc_B = '<0.1'
 		j_index = jaccard_index(inter_overlap,length_A,length_B)
 
-		var_and_cnv_b.append([row[0],row[1],row[2],length_A,perc_A,row[3],row[4],row[5],row[6],length_B,perc_B,row[7],inter_overlap,j_index])
+		var_and_cnv_b.append([row[0],row[1],row[2],length_A,perc_A,row[3],row[4],row[5],row[6],length_B,perc_B,row[7],inter_overlap,j_index,row[8],row[9],row[10],row[11],row[12],row[13],row[14],row[15],row[16],row[17]])
 
 	# length filter
 	if args.int_len_min or args.int_len_max:
@@ -87,7 +87,7 @@ def overlap(args):
 	id = 0
 	for r in var_and_cnv_b:
 		id += 1
-		overlap_result.append([id,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11],r[12],r[13]])
+		overlap_result.append([id,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11],r[12],r[13],r[14],r[15],r[16],r[17],r[18],r[19],r[20],r[21],r[22],r[23]])
 
 	e = sql.create_engine(database.get_path(args.db), isolation_level=None)
 	e.connect().connection.connection.text_factory = str

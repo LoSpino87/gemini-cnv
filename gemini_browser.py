@@ -296,7 +296,11 @@ def overlap():
 
         tmp_file = 'overlap_result.txt'
         tmp = open(tmp_file, 'w')
-        tmp.write('#uid\tchrom_A\tstart_A\tend_A\tlen_A\toverlap_A[%]\talt_A\tchrom_B\tstart_B\tend_B\tlen_B\toverlap_B[%]\ttype_B\toverlap[bp]\tjaccard_index'+'\n')
+        tmp.write('#uid\tchrom_A\tstart_A\tend_A\tlen_A\toverlap_A[%]\talt_A'
+                    +'\tchrom_B\tstart_B\tend_B\tlen_B\toverlap_B[%]\ttype_B'
+                    +'\toverlap[bp]\tjaccard_index\tnum_variants\tnum_sample'
+                    +'African\tAsian\tEuropean\tMexican\tMiddle_east'
+                    +'\tNative_american\tOceania\tSouth_american'+'\n')
 
         query_all = "SELECT * from overlap"
         result = GeminiQuery.GeminiQuery(database)
