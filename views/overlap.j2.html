@@ -4,7 +4,6 @@
 
 {% block body %}
 <div class='row page'>
-
 	<form class="well span6 offset3">
 		<div class="row">
 			<div class="span3">
@@ -21,7 +20,7 @@
 		<strong>Minimum overlap required as a fraction of A. Default is 1E-9 (i.e. 1bp).</strong>
 		<div class="control-group">
 				<label class="control-label" for="query">
-					<textarea rows="1" type="text" name="f", >{{f}}</textarea>
+					<textarea rows="1" type="text" name="f", ></textarea>
 				</label>
 		</div>
 		<div class="control-group">
@@ -36,14 +35,14 @@
 		<div>
 			<strong>Filter the overlap interval by length (min,max or a range)</strong>
 			<table>
-				<td><textarea rows="1" type="text" name="int_len_min" >{{int_len_min}}</textarea></td>
-				<td><textarea rows="1" type="text" name="int_len_max" >{{int_len_max}}</textarea></td>
+				<td><textarea rows="1" type="text" name="int_len_min" ></textarea></td>
+				<td><textarea rows="1" type="text" name="int_len_max" ></textarea></td>
 			</table>
 		</div>
 
 		<div>
 			<strong>or by alteration [DUP/DEL]</strong><br>
-			<textarea rows="1" type="text" name="alt_par" >{{alt_par}}</textarea>
+			<textarea rows="1" type="text" name="alt_par" ></textarea>
 		</div>
 
 		<div class="control-group">
@@ -51,7 +50,13 @@
  				<button type="submit" class="btn btn-large btn-primary" name="submit" value="submit">Submit</button>
 				<button type="submit" class="btn btn-large btn-success" name="save" value="save">Save as text file</button>
 			</div>
+			<em><strong>{{results}}</strong></em></textarea>
+			<textarea name="results" style="display:none;">{{results}}</textarea>
 		</div>
+
+
+
+
 	</form>
 
 

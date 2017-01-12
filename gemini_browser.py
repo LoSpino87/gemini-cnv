@@ -281,21 +281,22 @@ def overlap():
         over = GeminiQuery.GeminiQuery(database)
         over._set_gemini_browser(True)
         over.run(query_all)
-
-        return template('overlap.j2', dbfile=database, rows=over, maps_name = name, f = f_str, int_len_min = len_min, int_len_max = len_max, alt_par=alt, reciprocal = recip)
-
+        result = 'Results with: '
+        if f_str != '': result += 'minimum overlap fraction = ' + f_str
+        if recip != None: result += ' , reciprocal = ' + recip
+        if len_min != '': result += ' , minimum overlap length = ' + len_min
+        if len_max != '': result += ' , maximum overlap length = ' + len_max
+        if alt != '': result += ', alteration = ' + alt
+        else: result += ' -'
+        return template('overlap.j2', dbfile=database, rows=over, maps_name = name, results = result)
 
     # user clicked the "save as a text file" button
     elif request.GET.get('save', '').strip():
-
-        f_str = str(request.GET.get('f').strip())
-        recip = request.GET.get('reciprocal')
-        len_min = str(request.GET.get('int_len_min').strip())
-        len_max = str(request.GET.get('int_len_max').strip())
-        alt = str(request.GET.get('alt_par').strip())
+        res = str(request.GET.get('results'))
 
         tmp_file = 'overlap_result.txt'
         tmp = open(tmp_file, 'w')
+        tmp.write('## ' + res + '\n')
         tmp.write('#uid\tchrom_A\tstart_A\tend_A\tlen_A\toverlap_A[%]\talt_A'
                     +'\tchrom_B\tstart_B\tend_B\tlen_B\toverlap_B[%]\ttype_B'
                     +'\toverlap[bp]\tjaccard_index\tnum_variants\tnum_sample'
@@ -310,7 +311,7 @@ def overlap():
         for row in result:
             tmp.write(str(row)+'\n')
         tmp.close()
-        return template('overlap.j2', dbfile=database, rows=result, maps_name = name,f = f_str, r = reciprocal, int_len_min = len_min, int_len_max = len_max, alt_par=alt)
+        return template('overlap.j2', dbfile=database, rows=result, maps_name = name)
     else:
         return template('overlap.j2', dbfile=database, maps_name = name)
 
