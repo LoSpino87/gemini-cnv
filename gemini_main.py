@@ -3,7 +3,7 @@ import os.path
 import sys
 import tempfile
 import argparse
-import gemini.version
+import gemini_cnv.version
 import math
 
 def add_inheritance_args(parser, min_kindreds=1, depth=True, gt_ll=False,
@@ -111,10 +111,10 @@ def main():
     #########################################
     # create the top-level parser
     #########################################
-    parser = argparse.ArgumentParser(prog='gemini', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(prog='gemini_cnv', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-v", "--version", help="Installed gemini version",
                         action="version",
-                        version="%(prog)s " + str(gemini.version.__version__))
+                        version="%(prog)s " + str(gemini_cnv.version.__version__))
     parser.add_argument('--annotation-dir', dest='annotation_dir',
                              help='Path to the annotation database.\n'
                                 'This argument is optional and if given will take precedence over the default location stored in the gemini config file.')
