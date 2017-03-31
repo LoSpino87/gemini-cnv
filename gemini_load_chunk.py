@@ -233,10 +233,11 @@ class GeminiLoader(object):
                 self.var_impacts_buffer = []
             self.v_id += 1
             self.counter += 1
+
         # final load to the database
         self.v_id -= 1
         if self.var_buffer:
-            if self.args.cnv == True:
+            if self.args.cnv is True:
                 database.insert_variation_cnv(self.c, self.metadata, self.var_buffer)
             else:
                 database.insert_variation(self.c, self.metadata, self.var_buffer)

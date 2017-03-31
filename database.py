@@ -44,8 +44,8 @@ def index_variation(cursor):
     cursor.execute('''create index chrom_varid_idx on variants(chrom,variant_id)''')
     cursor.execute('CREATE index max_aaf_all_idx on variants(max_aaf_all)')
 
-def index_variation_cnv(cursor):
-    cursor.execute('''create index var_cnv_idx on variants_cnv(variant_id,chrom,start,end)''')
+#def index_variation_cnv(cursor):
+#    cursor.execute('''create index var_cnv_idx on variants_cnv(variant_id,chrom,start,end)''')
 
 def index_variation_impacts(cursor):
     cursor.execute('''create index varimp_exonic_idx on \
@@ -91,7 +91,7 @@ def create_indices(cursor):
     index_samples(cursor)
     index_gene_detailed(cursor)
     index_gene_summary(cursor)
-    index_variation_cnv(cursor)
+    #index_variation_cnv(cursor)
 
 
 def get_path(path):

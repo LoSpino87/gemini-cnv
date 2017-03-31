@@ -257,6 +257,11 @@ def main():
                                   dest='ped_file',
                                   help='Sample information file in PED+ format.',
                                   default=None)
+    parser_loadchunk.add_argument('--cnv',
+                                dest = 'cnv',
+                                action='store_true',
+                                help='Load a VCF file with CNV',
+                                default=False)
     parser_loadchunk.add_argument('--no-load-genotypes',
                                   dest='no_load_genotypes',
                                   action='store_true',
@@ -301,6 +306,9 @@ def main():
                                   default=tempfile.gettempdir(),
                                   help='Local (non-NFS) temp directory to use for working around SQLite locking issues '
                                        'on NFS drives.')
+    parser_loadchunk.add_argument('--dgv_cnvmap',
+                           dest = 'dgv_cnvmap',
+                           help = 'Load CNVmap from DGV database.')
 
     def loadchunk_fn(parser, args):
         import gemini_load_chunk
