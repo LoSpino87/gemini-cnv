@@ -257,11 +257,13 @@ def db_schema():
 
 @app.route('/overlap', method='GET')
 def overlap():
+    name = " no map "
     q_name = "SELECT resource FROM resources WHERE name='dgv_cnvmap'"
     nm = GeminiQuery.GeminiQuery(database)
     nm.run(q_name)
     for n in nm:
         name = n
+
 
     # user clicked the "submit" button
     if request.GET.get('submit', '').strip():
