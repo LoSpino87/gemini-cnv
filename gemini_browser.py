@@ -290,7 +290,7 @@ def overlap():
         if len_max != '': result += ' , maximum overlap length = ' + len_max
         if alt != '': result += ', alteration = ' + alt
         else: result += ' -'
-        return template('overlap.j2', dbfile=database, rows=over, maps_name = name, results = result)
+        return template('overlap.j2', dbfile=database, rows=over, maps_name = name, results = result, reciprocal = recip)
 
     # user clicked the "save as a text file" button
     elif request.GET.get('save', '').strip():

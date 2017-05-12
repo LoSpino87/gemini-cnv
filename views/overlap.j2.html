@@ -25,7 +25,9 @@
 		</div>
 		<div class="control-group">
 				<label class="checkbox" {display: inline-block};>
-					<input type="checkbox" name = "reciprocal"> Reciprocal
+					<!-- <input type="checkbox" name = ""> Reciprocal -->
+					<input type="checkbox" name="reciprocal" value="on" {{'checked="checked"' if reciprocal else ""}}/>Reciprocal
+
         	<br>
 					<strong>Note:</strong><em>  If checked, you must include a minimum overlap fraction</em>
 				</label>
