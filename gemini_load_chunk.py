@@ -555,15 +555,23 @@ class GeminiLoader(object):
                     extra_fields[dbkey] = float(extra_fields[dbkey])
         # construct the core variant record.
         # 1 row per variant to VARIANTS table
+
         if self.args.cnv==True:
             alt_str = ",".join([x or "" for x in var.ALT])
             if "<" in alt_str or ">" in alt_str:
                 alt_str = alt_str[1:-1]
-
+            # cnv variants
             variant = dict(variant_id=self.v_id, chrom=chrom, start=var.start,
                     end=var.end, sv_length=var.INFO["SVLEN"],
                     ref=var.REF,alt=alt_str,type=var.var_type,
-                    sub_type=var.var_subtype)
+                    sub_type=var.var_subtype, gts=pack_blob(gt_bases),
+                    gt_types = pack_blob(gt_types), gt_phases = pack_blob(gt_phases) ,
+                    gt_depths=pack_blob(gt_depths), gt_ref_depths=pack_blob(gt_ref_depths),
+                    gt_alt_depths=pack_blob(gt_alt_depths),
+                    gt_quals=pack_blob(gt_quals), gt_copy_numbers=pack_blob(gt_copy_numbers),
+                    gt_phred_ll_homref=pack_blob(gt_phred_ll_homref),
+                    gt_phred_ll_het=pack_blob(gt_phred_ll_het),
+                    gt_phred_ll_homalt=pack_blob(gt_phred_ll_homalt))
         else:
             variant = dict(chrom=chrom, start=var.start, end=var.end,
                    vcf_id=vcf_id, variant_id=self.v_id, anno_id=top_impact.anno_id,

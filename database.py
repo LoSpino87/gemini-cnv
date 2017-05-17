@@ -44,8 +44,6 @@ def index_variation(cursor):
     cursor.execute('''create index chrom_varid_idx on variants(chrom,variant_id)''')
     cursor.execute('CREATE index max_aaf_all_idx on variants(max_aaf_all)')
 
-#def index_variation_cnv(cursor):
-#    cursor.execute('''create index var_cnv_idx on variants_cnv(variant_id,chrom,start,end)''')
 
 def index_variation_impacts(cursor):
     cursor.execute('''create index varimp_exonic_idx on \
@@ -274,6 +272,17 @@ def create_tables(path, effect_fields=None):
     alt text,
     type varchar(15),
     sub_type text,
+    gts blob,
+    gt_types blob,
+    gt_phases blob,
+    gt_depths blob,
+    gt_ref_depths blob,
+    gt_alt_depths blob,
+    gt_quals blob,
+    gt_copy_numbers blob,
+    gt_phred_ll_homref blob,
+    gt_phred_ll_het blob,
+    gt_phred_ll_homalt blob,
     %s""" % effect_string.rstrip(","),
 
     variant_impacts="""
