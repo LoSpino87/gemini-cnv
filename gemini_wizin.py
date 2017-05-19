@@ -17,18 +17,18 @@ app = Bottle()
 static_folder = 'static'
 _static_folder = os.path.join(os.path.dirname(__file__), static_folder)
 
+def gemini_load_wiz():
+    gemini_load_cmd = ('gemini_cnv --version')
+    subprocess.call(gemini_load_cmd)
+    p = subprocess.Popen(gemini_load_cmd, shell = True, stdout = subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p.communicate()[0]
+
+
 @app.route('/wiz', method='POST')
 @app.route('/')
 def wizin():
-    if request.GET.get('load', '').strip():
-        VCFfile = str(request.GET.get('CNVmap').strip())
-        #cnv = request.GET.get('cnv')
-        #CNVmap = str(request.GET.get('CNVmap').strip())
-        outfile = str(request.GET.get('outfilename').strip())
-
-        gemini_load_cmd = ("gemini_cnv load -v " + VCFfile + " " + outfile +".db")
-
-        subprocess.check_call(gemini_load_cmd, shell=True, stderr=sys.stderr)
+    if request.GET.get('load','').strip():
+        gemini_load_wiz()
     else:
         return template('wizin.j2')
 
