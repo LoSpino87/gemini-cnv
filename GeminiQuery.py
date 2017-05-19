@@ -1258,9 +1258,14 @@ class GeminiQuery(object):
             return True
 
         tokens = self._tokenize_query()
-        requested_genotype = "variants" or "variants_cnv" in tokens and \
+        if "variants" in tokens:
+            requested_genotype = "variants" in tokens and \
                             (any(x.startswith(("gt", "(gt")) for x in tokens) or \
                              any(".gt" in x for x in tokens))
+        else:
+            requested_genotype = "variants_cnv" in tokens and \
+                            (any(x.startswith(("gt", "(gt")) for x in tokens) or \
+                            any(".gt" in x for x in tokens))
         return requested_genotype
 
 def select_formatter(args):
