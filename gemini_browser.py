@@ -317,6 +317,9 @@ def overlap():
     else:
         return template('overlap.j2', dbfile=database, maps_name = name)
 
+@app.route('/over_gene', method='GET')
+def overlap():
+    return template('over_gene.j2')
 
 ## Switch between the different available browsers
 def browser_puzzle(args):
