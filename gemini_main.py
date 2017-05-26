@@ -127,6 +127,23 @@ def main():
                                             help='show usage examples')
     parser_examples.set_defaults(func=examples)
 
+
+    #########################################
+    # $ gemini wizin
+    #########################################
+    parser_wizin = subparsers.add_parser('wizin',
+                                        help = 'wizard GUI to load all files')
+    parser_wizin.add_argument('--host', metavar='host', default='localhost',
+                                        help='Hostname, default: localhost.')
+    parser_wizin.add_argument('--port', metavar='port', default='8088',
+                                        help='Port, default: 8088.')
+
+    def wizin_fn(parser,args):
+        import gemini_wizin
+        gemini_wizin.wizin_main(parser,args)
+
+    parser_wizin.set_defaults(func=wizin_fn)
+
     #########################################
     # $ gemini load
     #########################################
