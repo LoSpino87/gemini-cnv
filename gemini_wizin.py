@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 import os
+import sys
 import warnings
 import webbrowser
 import subprocess
 
+# gemini modules
+import gemini_browser
 
 # -- common bottle importation
 with warnings.catch_warnings():
@@ -24,11 +27,12 @@ _static_folder = os.path.join(os.path.dirname(__file__), static_folder)
 
 def gemini_load_wiz():
     gemini_load_cmd = ("gemini_cnv load -v {vcf} {cnv} {CNVmap} {ped_file}"
-                        " {skip_gerp_bp} {skip_cadd}"
                         "{cores} {dbname}.db")
     return gemini_load_cmd
 
-
+def gemini_launch_browser(dbname):
+    gemini_launch_browser_cmd = ("gemini_cnv browser " + dbname +".db ")
+    return gemini_launch_browser_cmd
 
 
 @app.route('/', methods='POST')
@@ -37,28 +41,22 @@ def wizin():
     load = request.GET.get('load')
 
     # files and options
-    vcf = str(request.GET.get('VCFfile','').strip())
-    dbname = str(request.GET.get('outfilename','').strip())
+    vcf = request.params.get('VCFfile')
+    dbname = request.params.get('outfilename')
 
-    cnv = request.GET.get('cnv','').strip()
+    cnv = request.GET.get('cnv')
     if cnv =='on':
         cnv = '--cnv'
 
-    CNVmap = str(request.GET.get('CNVmap','').strip())
+    CNVmap = request.params.get('CNVmap')
     if CNVmap:
         CNVmap = '--dgv_cnvmap ' + CNVmap
 
-    ped_file = str(request.GET.get('PED','').strip())
+    ped_file = request.params.get('PED')
     if ped_file:
         ped_file = '-p ' + ped_file
 
-    skip_gerp_bp = str(request.GET.get('skip_gerp_bp','').strip())
-    if skip_gerp_bp =='on': skip_gerp_bp = '--skip-gerp-bp'
-
-    skip_cadd = str(request.GET.get('skip_cadd','').strip())
-    if skip_cadd =='on': skip_cadd = '--skip-cadd'
-
-    cores = str(request.GET.get('CORES','').strip())
+    cores = request.params.get('CORES')
     if cores:
         cores = '--cores ' + cores
 
@@ -68,7 +66,7 @@ def wizin():
         gemini_load_c = gemini_load_wiz().format(**locals())
         print gemini_load_c
         subprocess.call(gemini_load_c, shell = True)
-        return template('wizin.j2')
+        return template('end.j2')
     else:
         return template('wizin.j2')
 
@@ -81,16 +79,3 @@ def wizin_main(parser, args):
     webbrowser.open_new_tab("http://{}:{}".format(host, port))
     run(app, host=host, port=port,
         reloader=True, debug=True)
-
-    try:
-        if args.use == "puzzle":
-            browser_puzzle(args)
-            # XXX: https://github.com/dgaston/kvasir
-            #if args.use == "kvasir":
-            #    raise NotImplementedError
-        elif args.use == "builtin":
-            browser_builtin(args)
-        else:
-            raise NotImplementedError("GEMINI-compatible Browser '{browser}' not found.".format(browser=browser))
-    except ImportError as e:
-        raise ImportError("{exc}\nIs {browser} correctly installed?".format(exc=e, browser=browser))

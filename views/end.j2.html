@@ -55,29 +55,15 @@
     {% endblock %}
     <div class="container">
       {% block body %}
-
-          <div class='span10'>
-              <div class='hero-unit'>
-                  <h2>Welcome to the Gemini loading wizard</h2>
-          <br>
-          <form action = "\" method="GET" enctype="multipart/form-data">
-            Write the path of a VCF file: <input type="file" name="VCFfile" />
-            It contains cnv? <input type="checkbox" name = "cnv">
-            <br>
-            Select a CNV map: <input type="file" name="CNVmap" />
-            <br>
-            Select a PED file: <input type="file" name="PED" />
-            <br>
-            Number of cores: <input type="text" name="CORES" />
-            <br>
-            Output file name: <input type="text" name="outfilename" />
-            <div class="controls">
-              <button type="submit" class="btn btn-large btn-primary" name="load" value ="True" >Load</button>
-            </div>
-
-          </form>
-
-        </div>
+      <div class='span10'>
+          <div class='hero-unit'>
+              <h2>Loading process finish</h2>
+              <br>
+              Your database is loaded. You can query it by terminal gemini_cnv commands, or by gemini_cnv browser tool.
+              <br>
+              Close this page and stop the process on terminal.
+          </div>
+      </div>
       {% endblock %}
   </div>
 </body>

@@ -389,7 +389,7 @@ class GeminiLoader(object):
         ############################################################
         if var.end - var.POS < 50000:
             pfam_domain = annotations.get_pfamA_domains(var)
-            cyto_band = annotations.get_cyto_info(var)
+            cyto_band = annotations.get_rmsk_info(var)
             rs_ids = annotations.get_dbsnp_info(var)
             clinvar_info = annotations.get_clinvar_info(var)
             in_dbsnp = 0 if rs_ids is None else 1
@@ -562,7 +562,7 @@ class GeminiLoader(object):
                 alt_str = alt_str[1:-1]
             # cnv variants
             variant = dict(variant_id=self.v_id, chrom=chrom, start=var.start,
-                    end=var.end, sv_length=var.INFO["SVLEN"],
+                    end=var.end, sv_length=sv.get_length(),
                     ref=var.REF,alt=alt_str,type=var.var_type,
                     sub_type=var.var_subtype, gts=pack_blob(gt_bases),
                     gt_types = pack_blob(gt_types), gt_phases = pack_blob(gt_phases) ,
