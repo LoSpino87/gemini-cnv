@@ -319,7 +319,24 @@ def overlap():
 
 @app.route('/over_gene', method='GET')
 def overlap_gene():
-    return template('over_gene.j2')
+    """
+    A function to view the overlap between gene and CNV
+    """
+    query = """select v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.*
+                    from variants_cnv v, gene_summary g
+                    where g.chrom == v.chrom
+                    and g.transcript_min_start >= v.start
+                    and g.transcript_max_end <= v.end
+                    """
+
+    if request.GET.get('submit', '').strip():
+        res = GeminiQuery.GeminiQuery(database)
+        res._set_gemini_browser(True)
+        res.run(query)
+
+        return template('over_gene.j2', rows=res)
+    else:
+        return template('over_gene.j2')
 
 ## Switch between the different available browsers
 def browser_puzzle(args):

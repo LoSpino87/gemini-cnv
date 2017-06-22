@@ -41,7 +41,10 @@ def overlap(args):
 
 
 	# extract data from dgv_map table and create relative BED object
-	args.query = 'select chr,start,end,type,num_variants,num_samples,African,Asian,European,Mexican,Middle_east,Native_american,Oceania,South_american from dgv_map'
+	args.query = """select chr, start, end, type, num_variants, num_samples,
+					African, Asian, European, Mexican, Middle_east,
+					Native_american, Oceania, South_american
+					from dgv_map"""
 	CNV = GeminiQuery.GeminiQuery(args.db)
 	CNV.run(args.query)
 	cnv_string = ""

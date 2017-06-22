@@ -383,11 +383,10 @@ class GeminiLoader(object):
                 if aaf is not None:
                     aaf = max(aaf)
 
-        ############################################################
-        # collect annotations from gemini's custom annotation files
-        # but only if the size of the variant is <= 50kb
-        ############################################################
-        if var.end - var.POS < 50000:
+        ###################################################################
+        # collect annotations from gemini's custom annotation files for cnv
+        ###################################################################
+        if self.args.cnv==True:
             pfam_domain = annotations.get_pfamA_domains(var)
             cyto_band = annotations.get_rmsk_info(var)
             rs_ids = annotations.get_dbsnp_info(var)
@@ -422,34 +421,74 @@ class GeminiLoader(object):
             gerp_bp = None
             if self.args.skip_gerp_bp is False:
                 gerp_bp = annotations.get_gerp_bp(var)
-        # the variant is too big to annotate
         else:
-            pfam_domain = None
-            cyto_band = None
-            rs_ids = None
-            clinvar_info = annotations.ClinVarInfo()
-            in_dbsnp = None
-            rmsk_hits = None
-            in_cpg = None
-            in_segdup = None
-            is_conserved = None
-            esp = annotations.ESPInfo(False, -1, -1, -1, 0)
-            thousandG = annotations.EMPTY_1000G
-            Exac = annotations.EXAC_EMPTY
-            recomb_rate = None
-            gms = annotations.GmsTechs(None, None, None)
-            grc = None
-            in_cse = None
-            encode_tfbs = None
-            encode_dnaseI = annotations.ENCODEDnaseIClusters(None, None)
-            encode_cons_seg = annotations.ENCODESegInfo(None, None, None, None, None, None)
-            gerp_el = None
-            vista_enhancers = None
-            cosmic_ids = None
-            fitcons = None
-            cadd_raw = None
-            cadd_scaled = None
-            gerp_bp = None
+            ############################################################
+            # collect annotations from gemini's custom annotation files
+            # but only if the size of the variant is <= 50kb
+            ############################################################
+            if var.end - var.POS < 50000:
+                pfam_domain = annotations.get_pfamA_domains(var)
+                cyto_band = annotations.get_rmsk_info(var)
+                rs_ids = annotations.get_dbsnp_info(var)
+                clinvar_info = annotations.get_clinvar_info(var)
+                in_dbsnp = 0 if rs_ids is None else 1
+                rmsk_hits = annotations.get_rmsk_info(var)
+                in_cpg = annotations.get_cpg_island_info(var)
+                in_segdup = annotations.get_segdup_info(var)
+                is_conserved = annotations.get_conservation_info(var)
+                esp = annotations.get_esp_info(var)
+                thousandG = annotations.get_1000G_info(var)
+                recomb_rate = annotations.get_recomb_info(var)
+                gms = annotations.get_gms(var)
+                grc = annotations.get_grc(var)
+                in_cse = annotations.get_cse(var)
+                encode_tfbs = annotations.get_encode_tfbs(var)
+                encode_dnaseI = annotations.get_encode_dnase_clusters(var)
+                encode_cons_seg = annotations.get_encode_consensus_segs(var)
+                gerp_el = annotations.get_gerp_elements(var)
+                vista_enhancers = annotations.get_vista_enhancers(var)
+                cosmic_ids = annotations.get_cosmic_info(var)
+                fitcons = annotations.get_fitcons(var)
+                Exac = annotations.get_exac_info(var)
+
+                #load CADD scores by default
+                if self.args.skip_cadd is False:
+                    (cadd_raw, cadd_scaled) = annotations.get_cadd_scores(var)
+                else:
+                    (cadd_raw, cadd_scaled) = (None, None)
+
+                # load the GERP score for this variant by default.
+                gerp_bp = None
+                if self.args.skip_gerp_bp is False:
+                    gerp_bp = annotations.get_gerp_bp(var)
+            # the variant is too big to annotate
+            else:
+                pfam_domain = None
+                cyto_band = None
+                rs_ids = None
+                clinvar_info = annotations.ClinVarInfo()
+                in_dbsnp = None
+                rmsk_hits = None
+                in_cpg = None
+                in_segdup = None
+                is_conserved = None
+                esp = annotations.ESPInfo(False, -1, -1, -1, 0)
+                thousandG = annotations.EMPTY_1000G
+                Exac = annotations.EXAC_EMPTY
+                recomb_rate = None
+                gms = annotations.GmsTechs(None, None, None)
+                grc = None
+                in_cse = None
+                encode_tfbs = None
+                encode_dnaseI = annotations.ENCODEDnaseIClusters(None, None)
+                encode_cons_seg = annotations.ENCODESegInfo(None, None, None, None, None, None)
+                gerp_el = None
+                vista_enhancers = None
+                cosmic_ids = None
+                fitcons = None
+                cadd_raw = None
+                cadd_scaled = None
+                gerp_bp = None
 
         top_impact = empty
         if anno_keys == {}:
@@ -571,7 +610,10 @@ class GeminiLoader(object):
                     gt_quals=pack_blob(gt_quals), gt_copy_numbers=pack_blob(gt_copy_numbers),
                     gt_phred_ll_homref=pack_blob(gt_phred_ll_homref),
                     gt_phred_ll_het=pack_blob(gt_phred_ll_het),
-                    gt_phred_ll_homalt=pack_blob(gt_phred_ll_homalt))
+                    gt_phred_ll_homalt=pack_blob(gt_phred_ll_homalt),
+                    gms_illumina=gms.illumina,
+                    gms_solid=gms.solid,
+                    gms_iontorrent=gms.iontorrent)
         else:
             variant = dict(chrom=chrom, start=var.start, end=var.end,
                    vcf_id=vcf_id, variant_id=self.v_id, anno_id=top_impact.anno_id,

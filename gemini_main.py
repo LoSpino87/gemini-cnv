@@ -1266,6 +1266,20 @@ def main():
     parser_overlap.set_defaults(func=overlap_fn)
 
     #######################################################
+    # gemini overlap_gene
+    #######################################################
+    parser_overlap_gene = subparsers.add_parser('overlap_gene',
+                help = 'Overlap tools between Gene_summary table and Variants_cnv')
+    parser_overlap_gene.add_argument('db',
+                metavar = 'db',
+                help = 'The name of the database over run overlap tool')
+
+    def overlap_gene_fn(parser,args):
+        from tool_overlap_gene import run
+        run(parser,args)
+    parser_overlap_gene.set_defaults(func=overlap_gene_fn)
+
+    #######################################################
     # parse the args and call the selected function
     #######################################################
     import operator

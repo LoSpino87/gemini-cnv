@@ -283,6 +283,9 @@ def create_tables(path, effect_fields=None):
     gt_phred_ll_homref blob,
     gt_phred_ll_het blob,
     gt_phred_ll_homalt blob,
+    gms_illumina float,
+    gms_solid float,
+    gms_iontorrent float,
     %s""" % effect_string.rstrip(","),
 
     variant_impacts="""
