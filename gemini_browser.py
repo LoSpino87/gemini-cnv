@@ -1,10 +1,10 @@
 import os
 import warnings
 import webbrowser
+import subprocess
 from collections import namedtuple
 
 import GeminiQuery
-import tool_overlap
 
 import GeminiQuery
 from gemini.gim import (AutoDom, AutoRec, DeNovo, MendelViolations, CompoundHet)
@@ -22,7 +22,7 @@ database = None
 # -- common bottle importation
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    from bottle import TEMPLATE_PATH, Bottle, run, static_file, debug, request
+    from bottle import TEMPLATE_PATH, Bottle, run, static_file, debug, request,redirect
     from bottle import jinja2_template as template
 
 debug(True)
@@ -257,6 +257,8 @@ def db_schema():
 
 @app.route('/overlap', method='GET')
 def overlap():
+    import tool_overlap
+
     name = " no map "
     q_name = "SELECT resource FROM resources WHERE name='dgv_cnvmap'"
     nm = GeminiQuery.GeminiQuery(database)
@@ -319,24 +321,68 @@ def overlap():
 
 @app.route('/over_gene', method='GET')
 def overlap_gene():
-    """
-    A function to view the overlap between gene and CNV
-    """
-    query = """select v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.*
-                    from variants_cnv v, gene_summary g
-                    where g.chrom == v.chrom
-                    and g.transcript_min_start >= v.start
-                    and g.transcript_max_end <= v.end
-                    """
+    import tool_overlap_gene
 
     if request.GET.get('submit', '').strip():
-        res = GeminiQuery.GeminiQuery(database)
-        res._set_gemini_browser(True)
-        res.run(query)
+        res = tool_overlap_gene.overlap_gene_browser(database)
+        return template('over_gene.j2', rows=res)
 
+    elif request.GET.get('save', '').strip():
+        tmp_file = 'overlap_gene_result.txt'
+        tmp = open(tmp_file, 'w')
+
+        res = tool_overlap_gene.overlap_gene_browser(database)
+
+        for row in res:
+            tmp.write(str(row)+'\n')
+        tmp.close()
         return template('over_gene.j2', rows=res)
     else:
         return template('over_gene.j2')
+
+
+
+@app.route('/wizin', methods='POST')
+def wizin():
+
+    def gemini_load_wiz():
+        gemini_load_cmd = ("gemini_cnv load -v {vcf} {cnv} {CNVmap} {ped_file}"
+                            "{cores} {dbname}.db")
+        return gemini_load_cmd
+
+    # bottom
+    load = request.GET.get('load')
+
+    # files and options
+    vcf = request.params.get('VCFfile')
+    dbname = request.params.get('outfilename')
+
+    cnv = request.GET.get('cnv')
+    if cnv =='on':
+        cnv = '--cnv'
+
+    CNVmap = request.params.get('CNVmap')
+    if CNVmap:
+        CNVmap = '--dgv_cnvmap ' + CNVmap
+
+    ped_file = request.params.get('PED')
+    if ped_file:
+        ped_file = '-p ' + ped_file
+
+    cores = request.params.get('CORES')
+    if cores:
+        cores = '--cores ' + cores
+
+    submit_command = "{cmd}"
+
+    if load=="True":
+        gemini_load_c = gemini_load_wiz().format(**locals())
+        print gemini_load_c
+        subprocess.call(gemini_load_c, shell = True)
+        return template('end.j2')
+    else:
+        return template('wizin.j2')
+
 
 ## Switch between the different available browsers
 def browser_puzzle(args):
