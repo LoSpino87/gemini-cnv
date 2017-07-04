@@ -47,6 +47,9 @@ class StructuralVariant(object):
     def get_mate_id(self):
         return self.var.INFO.get('MATEID')
 
+    def get_svtype(self):
+        return self.var.INFO.get('SVTYPE')
+
     def get_strand(self):
         """
         REF ALT Meaning
