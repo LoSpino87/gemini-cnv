@@ -1297,6 +1297,7 @@ def main():
                 sys.stderr.write("Requested GEMINI database (%s) not found. "
                                  "Please confirm the provided filename.\n"
                                  % args.db)
+
     elif len(sys.argv) > 2 and sys.argv[1] == "load":
         if xor(args.scheduler, args.queue):
             parser.error("If you are using the IPython parallel loading, you "

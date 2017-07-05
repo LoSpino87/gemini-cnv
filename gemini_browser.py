@@ -72,6 +72,13 @@ def server_static(filepath):
 @app.route('/index')
 @app.route('/')
 def index():
+    # control the exist of database in the path make sure database is found if provided
+    if database is None or not os.path.exists(database):
+        redirect('/wizin')
+
+    #user clicked the "loading wizard" button
+    if request.GET.get('load_wiz', '').strip():
+        redirect('wizin')
     return template('index.j2')
 
 @app.route('/query_json', method='GET')
@@ -347,19 +354,20 @@ def wizin():
 
     def gemini_load_wiz():
         gemini_load_cmd = ("gemini_cnv load -v {vcf} {cnv} {CNVmap} {ped_file}"
-                            "{cores} {dbname}.db")
+                            "{cores} {database}.db")
         return gemini_load_cmd
 
+    message = "Create your database, if not exists, with the Loading Wizard below from VCF.\n"
     # bottom
     load = request.GET.get('load')
 
     # files and options
     vcf = request.params.get('VCFfile')
-    dbname = request.params.get('outfilename')
+    database = request.params.get('outfilename')
 
     cnv = request.GET.get('cnv')
-    if cnv =='on':
-        cnv = '--cnv'
+    if cnv =='on':cnv = '--cnv'
+    else: cnv=''
 
     CNVmap = request.params.get('CNVmap')
     if CNVmap:
@@ -375,13 +383,13 @@ def wizin():
 
     submit_command = "{cmd}"
 
-    if load=="True":
+    if load=='True':
         gemini_load_c = gemini_load_wiz().format(**locals())
         print gemini_load_c
         subprocess.call(gemini_load_c, shell = True)
-        return template('end.j2')
-    else:
-        return template('wizin.j2')
+        redirect('/index')
+
+    return template('wizin.j2',message=message)
 
 
 ## Switch between the different available browsers
