@@ -10,7 +10,7 @@
           <br>
           <h3>{{message}}</h3>
           <br>
-          <form action = "\wizin" method="GET" enctype="multipart/form-data">
+          <form action = "\wizin" method="POST" enctype="multipart/form-data">
             Select a VCF file: <input type="file" name="VCFfile" />
             It contains cnv? <input type="checkbox" name = "cnv">
             <br>
@@ -22,7 +22,7 @@
             <br>
             Output file name (example.db): <input type="text" name="outfilename" />
             <div class="controls">
-              <button type="submit" class="btn btn-large btn-primary" name="load" value = 'True'>Load</button>
+              <button type="submit" class="btn btn-large btn-primary" name="load" value="True">Load</button>
             </div>
           </form>
 

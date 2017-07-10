@@ -22,7 +22,7 @@ database = None
 # -- common bottle importation
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    from bottle import TEMPLATE_PATH, Bottle, run, static_file, debug, request,redirect
+    from bottle import TEMPLATE_PATH, Bottle, run, static_file, debug, request, redirect, FileUpload
     from bottle import jinja2_template as template
 
 debug(True)
@@ -349,7 +349,7 @@ def overlap_gene():
 
 
 
-@app.route('/wizin', methods='POST')
+@app.route('/wizin', method=['POST','GET'])
 def wizin():
 
     def gemini_load_wiz():
@@ -359,23 +359,59 @@ def wizin():
 
     message = "Create your database, if not exists, with the Loading Wizard below from VCF.\n"
     # bottom
-    load = request.GET.get('load')
+    load = request.POST.get('load')
+    save_path = ''
 
-    # files and options
-    vcf = request.params.get('VCFfile')
+    ## files and options
+    vcf = request.files.get('VCFfile')
+    if vcf:
+        name, ext = os.path.splitext(vcf.filename)
+        # control extension
+        if ext !='.vcf':
+            message = 'File extension of VCF file is not allowed.'
+            return template('wizin.j2', message=message)
+
+        # save file
+        save_path = os.getcwd() + "/{vcf}".format(vcf=name)
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        file_path = "{path}/{file}".format(path=save_path, file=vcf.raw_filename)
+        vcf.save(file_path)
+        vcf = save_path + '/' + vcf.raw_filename
+
+
     database = request.params.get('outfilename')
 
-    cnv = request.GET.get('cnv')
+    cnv = request.POST.get('cnv')
     if cnv =='on':cnv = '--cnv'
     else: cnv=''
 
-    CNVmap = request.params.get('CNVmap')
+    CNVmap = request.files.get('CNVmap')
     if CNVmap:
-        CNVmap = '--dgv_cnvmap ' + CNVmap
+        name, ext = os.path.splitext(CNVmap.filename)
+        # control extension
+        if ext !='.txt':
+            message = 'File extension of CVN map is not allowed.'
+            return template('wizin.j2', message=message)
 
-    ped_file = request.params.get('PED')
+        # save file
+        file_path = "{path}/{file}".format(path=save_path, file=CNVmap.raw_filename)
+        CNVmap.save(file_path)
+        CNVmap = '--dgv_cnvmap ' + save_path + '/' + CNVmap.raw_filename
+
+
+    ped_file = request.files.get('PED')
     if ped_file:
-        ped_file = '-p ' + ped_file
+        name, ext = os.path.splitext(ped_file.filename)
+        # control extension
+        if ext !='.txt':
+            message = 'File extension of PED file  is not allowed.'
+            return template('wizin.j2', message=message)
+
+        # save file
+        file_path = "{path}/{file}".format(path=save_path, file=ped_file.raw_filename)
+        ped_file.save(file_path)
+        ped_file = '-p ' + save_path + '/' + ped_file.raw_filename
 
     cores = request.params.get('CORES')
     if cores:
@@ -383,13 +419,14 @@ def wizin():
 
     submit_command = "{cmd}"
 
-    if load=='True':
+    if load == 'True':
         gemini_load_c = gemini_load_wiz().format(**locals())
         print gemini_load_c
         subprocess.call(gemini_load_c, shell = True)
         redirect('/index')
 
     return template('wizin.j2',message=message)
+
 
 
 ## Switch between the different available browsers
