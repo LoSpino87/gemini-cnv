@@ -134,7 +134,8 @@ class GeminiLoader(object):
         if self.args.dgv_cnvmap is not None:
             file_dgv = self.args.dgv_cnvmap
             self._get_dgv_map(file_dgv)
-            database.insert_resources(self.c,self.metadata, {('dgv_cnvmap',str(file_dgv))})
+            file_dgv_name = str(file_dgv).split('/')[-1]
+            database.insert_resources(self.c,self.metadata, {('dgv_cnvmap',file_dgv_name)})
 
     def store_vcf_header(self):
         """Store the raw VCF header.

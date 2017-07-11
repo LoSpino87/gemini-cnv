@@ -2,6 +2,7 @@ import os
 import warnings
 import webbrowser
 import subprocess
+import shutil
 from collections import namedtuple
 
 import GeminiQuery
@@ -371,10 +372,15 @@ def wizin():
             message = 'File extension of VCF file is not allowed.'
             return template('wizin.j2', message=message)
 
-        # save file
+        # re-create save folder
         save_path = os.getcwd() + "/{vcf}".format(vcf=name)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
+        else:
+            shutil.rmtree(save_path)
+            os.makedirs(save_path)
+
+        #save file
         file_path = "{path}/{file}".format(path=save_path, file=vcf.raw_filename)
         vcf.save(file_path)
         vcf = save_path + '/' + vcf.raw_filename
@@ -398,6 +404,7 @@ def wizin():
         file_path = "{path}/{file}".format(path=save_path, file=CNVmap.raw_filename)
         CNVmap.save(file_path)
         CNVmap = '--dgv_cnvmap ' + save_path + '/' + CNVmap.raw_filename
+    else: CNVmap=''
 
 
     ped_file = request.files.get('PED')
@@ -412,6 +419,7 @@ def wizin():
         file_path = "{path}/{file}".format(path=save_path, file=ped_file.raw_filename)
         ped_file.save(file_path)
         ped_file = '-p ' + save_path + '/' + ped_file.raw_filename
+    else: ped_file=''
 
     cores = request.params.get('CORES')
     if cores:
