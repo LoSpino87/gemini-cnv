@@ -390,7 +390,7 @@ def wizin():
 
     cnv = request.POST.get('cnv')
     if cnv =='on':cnv = '--cnv'
-    else: cnv=''
+    else: cnv = '' 
 
     CNVmap = request.files.get('CNVmap')
     if CNVmap:
