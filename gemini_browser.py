@@ -70,6 +70,7 @@ def server_static(filepath):
 # -- index page routing
 
 
+### loading wizard ###
 @app.route('/index')
 @app.route('/')
 def index():
@@ -349,19 +350,28 @@ def overlap_gene():
         return template('over_gene.j2')
 
 
-
+### loading wizard ###
 @app.route('/wizin', method=['POST','GET'])
 def wizin():
 
     def gemini_load_wiz():
         gemini_load_cmd = ("gemini_cnv load -v {vcf} {cnv} {CNVmap} {ped_file}"
-                            "{cores} {database}.db")
+                            "{cores} %s") %database
         return gemini_load_cmd
 
-    message = "Create your database, if not exists, with the Loading Wizard below from VCF.\n"
+    message = "Create your database (%s), if not exists, with the Loading Wizard below from VCF.\n" %database
     # bottom
     load = request.POST.get('load')
-    save_path = ''
+
+
+    # re-create save folder
+    save_path = os.getcwd() + '/' + str(database[:-3])
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    else:
+        shutil.rmtree(save_path)
+        os.makedirs(save_path)
+
 
     ## files and options
     vcf = request.files.get('VCFfile')
@@ -372,25 +382,15 @@ def wizin():
             message = 'File extension of VCF file is not allowed.'
             return template('wizin.j2', message=message)
 
-        # re-create save folder
-        save_path = os.getcwd() + "/{vcf}".format(vcf=name)
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
-        else:
-            shutil.rmtree(save_path)
-            os.makedirs(save_path)
-
         #save file
         file_path = "{path}/{file}".format(path=save_path, file=vcf.raw_filename)
         vcf.save(file_path)
         vcf = save_path + '/' + vcf.raw_filename
 
 
-    database = request.params.get('outfilename')
-
     cnv = request.POST.get('cnv')
     if cnv =='on':cnv = '--cnv'
-    else: cnv = '' 
+    else: cnv = ''
 
     CNVmap = request.files.get('CNVmap')
     if CNVmap:
