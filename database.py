@@ -89,7 +89,17 @@ def create_indices(cursor):
     index_samples(cursor)
     index_gene_detailed(cursor)
     index_gene_summary(cursor)
-    #index_variation_cnv(cursor)
+
+def create_gene_view(cursor):
+    """
+    View of gene_summary table, without redundances
+    """
+    cursor.execute('''create view gene_view as \
+                        SELECT * from gene_summary group by ensembl_gene_id having count(*)=1
+                        UNION
+                        SELECT * from gene_summary where is_hgnc=='1' group by ensembl_gene_id having count(*)>1
+                    ''')
+
 
 
 def get_path(path):

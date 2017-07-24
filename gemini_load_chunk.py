@@ -277,6 +277,8 @@ class GeminiLoader(object):
         """
         # index our tables for speed
         database.create_indices(self.c)
+        # create views
+        database.create_gene_view(self.c)
         # commit data and close up
         database.close_and_commit(self.c)
 
@@ -384,10 +386,11 @@ class GeminiLoader(object):
                 if aaf is not None:
                     aaf = max(aaf)
 
-        ###################################################################
-        # collect annotations from gemini's custom annotation files for cnv
-        ###################################################################
-        if self.args.cnv==True:
+        ############################################################
+        # collect annotations from gemini's custom annotation files
+        # but only if the size of the variant is <= 50kb
+        ############################################################
+        if var.end - var.POS < 50000:
             pfam_domain = annotations.get_pfamA_domains(var)
             cyto_band = annotations.get_rmsk_info(var)
             rs_ids = annotations.get_dbsnp_info(var)
@@ -422,74 +425,34 @@ class GeminiLoader(object):
             gerp_bp = None
             if self.args.skip_gerp_bp is False:
                 gerp_bp = annotations.get_gerp_bp(var)
+        # the variant is too big to annotate
         else:
-            ############################################################
-            # collect annotations from gemini's custom annotation files
-            # but only if the size of the variant is <= 50kb
-            ############################################################
-            if var.end - var.POS < 50000:
-                pfam_domain = annotations.get_pfamA_domains(var)
-                cyto_band = annotations.get_rmsk_info(var)
-                rs_ids = annotations.get_dbsnp_info(var)
-                clinvar_info = annotations.get_clinvar_info(var)
-                in_dbsnp = 0 if rs_ids is None else 1
-                rmsk_hits = annotations.get_rmsk_info(var)
-                in_cpg = annotations.get_cpg_island_info(var)
-                in_segdup = annotations.get_segdup_info(var)
-                is_conserved = annotations.get_conservation_info(var)
-                esp = annotations.get_esp_info(var)
-                thousandG = annotations.get_1000G_info(var)
-                recomb_rate = annotations.get_recomb_info(var)
-                gms = annotations.get_gms(var)
-                grc = annotations.get_grc(var)
-                in_cse = annotations.get_cse(var)
-                encode_tfbs = annotations.get_encode_tfbs(var)
-                encode_dnaseI = annotations.get_encode_dnase_clusters(var)
-                encode_cons_seg = annotations.get_encode_consensus_segs(var)
-                gerp_el = annotations.get_gerp_elements(var)
-                vista_enhancers = annotations.get_vista_enhancers(var)
-                cosmic_ids = annotations.get_cosmic_info(var)
-                fitcons = annotations.get_fitcons(var)
-                Exac = annotations.get_exac_info(var)
-
-                #load CADD scores by default
-                if self.args.skip_cadd is False:
-                    (cadd_raw, cadd_scaled) = annotations.get_cadd_scores(var)
-                else:
-                    (cadd_raw, cadd_scaled) = (None, None)
-
-                # load the GERP score for this variant by default.
-                gerp_bp = None
-                if self.args.skip_gerp_bp is False:
-                    gerp_bp = annotations.get_gerp_bp(var)
-            # the variant is too big to annotate
-            else:
-                pfam_domain = None
-                cyto_band = None
-                rs_ids = None
-                clinvar_info = annotations.ClinVarInfo()
-                in_dbsnp = None
-                rmsk_hits = None
-                in_cpg = None
-                in_segdup = None
-                is_conserved = None
-                esp = annotations.ESPInfo(False, -1, -1, -1, 0)
-                thousandG = annotations.EMPTY_1000G
-                Exac = annotations.EXAC_EMPTY
-                recomb_rate = None
-                gms = annotations.GmsTechs(None, None, None)
-                grc = None
-                in_cse = None
-                encode_tfbs = None
-                encode_dnaseI = annotations.ENCODEDnaseIClusters(None, None)
-                encode_cons_seg = annotations.ENCODESegInfo(None, None, None, None, None, None)
-                gerp_el = None
-                vista_enhancers = None
-                cosmic_ids = None
-                fitcons = None
-                cadd_raw = None
-                cadd_scaled = None
-                gerp_bp = None
+            pfam_domain = None
+            cyto_band = None
+            rs_ids = None
+            clinvar_info = annotations.ClinVarInfo()
+            in_dbsnp = None
+            rmsk_hits = None
+            in_cpg = None
+            in_segdup = None
+            is_conserved = None
+            esp = annotations.ESPInfo(False, -1, -1, -1, 0)
+            thousandG = annotations.EMPTY_1000G
+            Exac = annotations.EXAC_EMPTY
+            recomb_rate = None
+            gms = annotations.GmsTechs(None, None, None)
+            grc = None
+            in_cse = None
+            encode_tfbs = None
+            encode_dnaseI = annotations.ENCODEDnaseIClusters(None, None)
+            encode_cons_seg = annotations.ENCODESegInfo(None, None, None, None, None, None)
+            gerp_el = None
+            vista_enhancers = None
+            cosmic_ids = None
+            fitcons = None
+            cadd_raw = None
+            cadd_scaled = None
+            gerp_bp = None
 
         top_impact = empty
         if anno_keys == {}:

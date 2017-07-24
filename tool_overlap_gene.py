@@ -19,29 +19,27 @@ def overlap_gene_main(args):
 	A function to view the overlap between gene and CNV
 	"""
 	args.query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.*
-				from variants_cnv v, gene_summary g
+				from variants_cnv v, gene_view g
 				where g.chrom == v.chrom
 				and g.transcript_min_start >= v.start
 				and g.transcript_max_end <= v.end
-				and g.ensembl_gene_id IN (SELECT d.ensembl_gene_id from gene_summary d group by d.ensembl_gene_id having count(*)=1
-				UNION
-				SELECT d.ensembl_gene_id from gene_summary d where d.is_hgnc=='1' group by d.ensembl_gene_id having count(*)>1 )
-				group by g.ensembl_gene_id"""
+				order by g.ensembl_gene_id"""
 
 	res = GeminiQuery.GeminiQuery(args.db)
 	res.run(args.query)
 
-	sample = 'NA07000'
+	samples = sample_name(args)
 	gene = []
 	alt = []
 
 	for row in res:
-		gene.append(row['gene'])
+		gene.append(str(row['gene']))
 		if row['alt'] == 'DUP':
 			alt.append(1)
-		else: alt.append(0)
+		else: alt.append(-1)
 		print row
-	#heatmap(gene,alt,sample)
+	heatmap(gene,alt,samples)
+
 
 def overlap_gene_browser(database):
 
@@ -49,56 +47,36 @@ def overlap_gene_browser(database):
 	A function to view the overlap between gene and CNV
 	"""
 	query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.*
-				from variants_cnv v, gene_summary g
+				from variants_cnv v, gene_view g
 				where g.chrom == v.chrom
 				and g.transcript_min_start >= v.start
 				and g.transcript_max_end <= v.end
-				and g.ensembl_gene_id IN (SELECT d.ensembl_gene_id from gene_summary d group by d.ensembl_gene_id having count(*)=1
-				UNION
-				SELECT d.ensembl_gene_id from gene_summary d where d.is_hgnc=='1' group by d.ensembl_gene_id having count(*)>1 )
-				group by g.ensembl_gene_id"""
+				order by g.ensembl_gene_id"""
 	res = GeminiQuery.GeminiQuery(database)
 	res._set_gemini_browser(True)
 	res.run(query)
 
 	return res
 
+def sample_name(args):
+	names = []
+	args.query = "SELECT name FROM samples"
+	name = GeminiQuery.GeminiQuery(args.db)
+	name.run(args.query)
+	for n in name:
+		names.append(n)
+	return names
 
 def heatmap(gene,alt,sample):
 	import matplotlib.pyplot as plt
 	import matplotlib
 	import numpy as np
+	import seaborn as sb; sb.set()
 
 	alt_a = np.array(alt)
 	alt_a_T = alt_a[np.newaxis, :].T
 
-	# Plot it out
-	fig, ax = plt.subplots()
-	heatmap = ax.pcolor(alt_a_T, cmap=plt.cm.Blues)
-
-	# put the major ticks at the middle of each cell
-	ax.set_xticks(np.arange(alt_a_T[0]) + 0.5, minor=False)
-
-	ax.set_frame_on(False)
-	ax.xaxis.tick_top()
-
-	# note I could have used nba_sort.columns but made "labels" instead
-	ax.set_xticklabels(sample, minor=False)
-	ax.set_yticklabels(gene, minor=False)
-
-	# rotate the
-	#plt.yticks(rotation=90)
-
-	ax.grid(False)
-
-	# Turn off all the ticks
-	ax = plt.gca()
-
-	for t in ax.xaxis.get_major_ticks():
-	    t.tick1On = False
-	    t.tick2On = False
-	for t in ax.yaxis.get_major_ticks():
-	    t.tick1On = False
-	    t.tick2On = False
-
-	plt.show(heatmap)
+	ax = sb.heatmap(alt_a_T,linewidths=.2)
+	ax.set_xticklabels(sample)
+	ax.set_yticklabels(gene,rotation=0)
+	plt.show(ax)
