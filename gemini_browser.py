@@ -346,6 +346,12 @@ def overlap_gene():
             tmp.write(str(row)+'\n')
         tmp.close()
         return template('over_gene.j2', rows=res)
+
+    elif request.GET.get('heatmap','').strip():
+        name, ext = str(database).split('.')
+    	path_name = os.getcwd() + '/' + name + '/'
+        picture = path_name + name + '_overlap_gene.png'
+        webbrowser.open('file://' + picture)
     else:
         return template('over_gene.j2')
 

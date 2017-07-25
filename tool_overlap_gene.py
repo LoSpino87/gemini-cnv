@@ -23,12 +23,12 @@ def overlap_gene_main(args):
 				where g.chrom == v.chrom
 				and g.transcript_min_start >= v.start
 				and g.transcript_max_end <= v.end
-				order by g.ensembl_gene_id"""
+				order by g.gene"""
 
 	res = GeminiQuery.GeminiQuery(args.db)
 	res.run(args.query)
 
-	samples = sample_name(args)
+	samples = sample_name(database = args.db)
 	gene = []
 	alt = []
 
@@ -38,7 +38,7 @@ def overlap_gene_main(args):
 			alt.append(1)
 		else: alt.append(-1)
 		print row
-	heatmap(gene,alt,samples)
+	heatmap(gene,alt,samples,database=args.db)
 
 
 def overlap_gene_browser(database):
@@ -51,23 +51,36 @@ def overlap_gene_browser(database):
 				where g.chrom == v.chrom
 				and g.transcript_min_start >= v.start
 				and g.transcript_max_end <= v.end
-				order by g.ensembl_gene_id"""
+				order by g.gene"""
 	res = GeminiQuery.GeminiQuery(database)
 	res._set_gemini_browser(True)
 	res.run(query)
 
-	return res
+	samples = sample_name(database)
+	gene = []
+	alt = []
+	result = []
+	
+	for row in res:
+		gene.append(str(row['gene']))
+		if row['alt'] == 'DUP':
+			alt.append(1)
+		else: alt.append(-1)
+		result.append(row)
+	heatmap(gene,alt,samples,database=database)
 
-def sample_name(args):
+	return result
+
+def sample_name(database):
 	names = []
-	args.query = "SELECT name FROM samples"
-	name = GeminiQuery.GeminiQuery(args.db)
-	name.run(args.query)
+	query = "SELECT name FROM samples"
+	name = GeminiQuery.GeminiQuery(database)
+	name.run(query)
 	for n in name:
 		names.append(n)
 	return names
 
-def heatmap(gene,alt,sample):
+def heatmap(gene,alt,sample,database):
 	import matplotlib.pyplot as plt
 	import matplotlib
 	import numpy as np
@@ -76,7 +89,34 @@ def heatmap(gene,alt,sample):
 	alt_a = np.array(alt)
 	alt_a_T = alt_a[np.newaxis, :].T
 
-	ax = sb.heatmap(alt_a_T,linewidths=.2)
+	# get the tick label font size
+	fontsize_pt = plt.rcParams['ytick.labelsize']
+	dpi = 72.27
+
+	# comput the matrix height in points and inches
+	matrix_height_pt = fontsize_pt * alt_a_T.shape[0]
+	matrix_height_in = matrix_height_pt / dpi
+
+	# compute the required figure height
+	top_margin = 0.04  # in percentage of the figure height
+	bottom_margin = 0.04 # in percentage of the figure height
+	figure_height = matrix_height_in / (1 - top_margin - bottom_margin)
+
+
+	# build the figure instance with the desired height
+	fig, ax = plt.subplots(
+	        figsize=(6,figure_height),
+	        gridspec_kw=dict(top=1-top_margin, bottom=bottom_margin))
+
+
+	ax = sb.heatmap(alt_a_T,linewidths=.2, ax=ax)
 	ax.set_xticklabels(sample)
 	ax.set_yticklabels(gene,rotation=0)
-	plt.show(ax)
+	cbar = ax.collections[0].colorbar
+	cbar.set_ticks([-1, 0, 1])
+	cbar.set_ticklabels(['DEL', 'none', 'DUP'])
+
+	# save the figure
+	name, ext = str(database).split('.')
+	path_name = os.getcwd() + '/' + name + '/'
+	plt.savefig(path_name + name +'_overlap_gene.png')
