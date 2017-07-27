@@ -1266,13 +1266,17 @@ def main():
     parser_overlap.set_defaults(func=overlap_fn)
 
     #######################################################
-    # gemini overlap_gene
+    # gemini e
     #######################################################
     parser_overlap_gene = subparsers.add_parser('overlap_gene',
                 help = 'Overlap tools between Gene_summary table and Variants_cnv')
     parser_overlap_gene.add_argument('db',
                 metavar = 'db',
                 help = 'The name of the database over run overlap tool')
+    parser_overlap_gene.add_argument('--heatmap',
+                dest = 'heatmap',
+                action = 'store_true',
+                help = 'Create relative heatmap png file into database directory')
 
     def overlap_gene_fn(parser,args):
         from tool_overlap_gene import run

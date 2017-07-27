@@ -3,15 +3,24 @@
 
 # Python imports
 import os.path
+import os
 import re
 import sys
+import matplotlib
+import matplotlib.pyplot as plt
 
 # Gemini imports
 import GeminiQuery
 
+gene = []
+alt = []
+samples = []
+result = []
+
 def run(parser, args):
 	if os.path.exists(args.db):
 		overlap_gene_main(args)
+		samples = sample_name(database = args.db)
 
 def overlap_gene_main(args):
 	import numpy as np
@@ -28,17 +37,18 @@ def overlap_gene_main(args):
 	res = GeminiQuery.GeminiQuery(args.db)
 	res.run(args.query)
 
-	samples = sample_name(database = args.db)
-	gene = []
-	alt = []
-
 	for row in res:
 		gene.append(str(row['gene']))
 		if row['alt'] == 'DUP':
 			alt.append(1)
 		else: alt.append(-1)
 		print row
-	heatmap(gene,alt,samples,database=args.db)
+
+	if args.heatmap:
+		heatmap(database=args.db)
+		name, ext = str(args.db).split('.')
+		path_name = os.getcwd() + '/' + name + '/'
+		picture = path_name + name + '_overlap_gene.png'
 
 
 def overlap_gene_browser(database):
@@ -56,18 +66,12 @@ def overlap_gene_browser(database):
 	res._set_gemini_browser(True)
 	res.run(query)
 
-	samples = sample_name(database)
-	gene = []
-	alt = []
-	result = []
-	
 	for row in res:
 		gene.append(str(row['gene']))
 		if row['alt'] == 'DUP':
 			alt.append(1)
 		else: alt.append(-1)
 		result.append(row)
-	heatmap(gene,alt,samples,database=database)
 
 	return result
 
@@ -80,9 +84,7 @@ def sample_name(database):
 		names.append(n)
 	return names
 
-def heatmap(gene,alt,sample,database):
-	import matplotlib.pyplot as plt
-	import matplotlib
+def heatmap(database):
 	import numpy as np
 	import seaborn as sb; sb.set()
 
@@ -110,7 +112,7 @@ def heatmap(gene,alt,sample,database):
 
 
 	ax = sb.heatmap(alt_a_T,linewidths=.2, ax=ax)
-	ax.set_xticklabels(sample)
+	ax.set_xticklabels(samples)
 	ax.set_yticklabels(gene,rotation=0)
 	cbar = ax.collections[0].colorbar
 	cbar.set_ticks([-1, 0, 1])
