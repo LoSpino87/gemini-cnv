@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 # Gemini imports
@@ -46,9 +47,6 @@ def overlap_gene_main(args):
 
 	if args.heatmap:
 		heatmap(database=args.db)
-		name, ext = str(args.db).split('.')
-		path_name = os.getcwd() + '/' + name + '/'
-		picture = path_name + name + '_overlap_gene.png'
 
 
 def overlap_gene_browser(database):

@@ -385,7 +385,7 @@ def wizin():
     if vcf:
         name, ext = os.path.splitext(vcf.filename)
         # control extension
-        if ext !='.vcf':
+        if ext not in ('.vcf','.gz'):
             message = 'File extension of VCF file is not allowed.'
             return template('wizin.j2', message=message)
 
