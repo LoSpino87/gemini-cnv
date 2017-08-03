@@ -350,7 +350,7 @@ def overlap_gene():
     elif request.GET.get('heatmap','').strip():
         tool_overlap_gene.heatmap(database)
         name, ext = str(database).split('.')
-    	path_name = os.getcwd() + '/' + name + '/'
+    	path_name = os.getcwd() + '/'
         picture = path_name + name + '_overlap_gene.png'
         webbrowser.open('file://' + picture)
     else:

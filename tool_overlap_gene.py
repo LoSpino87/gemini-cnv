@@ -118,5 +118,6 @@ def heatmap(database):
 
 	# save the figure
 	name, ext = str(database).split('.')
-	path_name = os.getcwd() + '/' + name + '/'
+	path_name = os.getcwd() + '/'
+	print path_name
 	plt.savefig(path_name + name +'_overlap_gene.png')
