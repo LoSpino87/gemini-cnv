@@ -28,7 +28,7 @@ def overlap_gene_main(args):
 	"""
 	A function to view the overlap between gene and CNV
 	"""
-	args.query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.*
+	args.query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene, g.ensembl_gene_id, g.synonym
 				from variants_cnv v, gene_view g
 				where g.chrom == v.chrom
 				and g.transcript_min_start >= v.start
@@ -54,7 +54,7 @@ def overlap_gene_browser(database):
 	"""
 	A function to view the overlap between gene and CNV
 	"""
-	query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.*
+	query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene, g.ensembl_gene_id, g.synonym
 				from variants_cnv v, gene_view g
 				where g.chrom == v.chrom
 				and g.transcript_min_start >= v.start

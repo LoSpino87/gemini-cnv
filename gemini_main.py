@@ -1276,7 +1276,7 @@ def main():
     parser_overlap_gene.add_argument('--heatmap',
                 dest = 'heatmap',
                 action = 'store_true',
-                help = 'Create relative heatmap png file into database directory')
+                help = 'Create relative a .png file into the working directory of the heatmap')
 
     def overlap_gene_fn(parser,args):
         from tool_overlap_gene import run
