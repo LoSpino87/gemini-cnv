@@ -207,6 +207,7 @@ class Arguments(object):
         if not 'int_len_min' in kwargs: kwargs['int_len_min'] = None
         if not 'int_len_max' in kwargs: kwargs['int_len_max'] = None
         self.__dict__.update(**kwargs)
+        if not 'gene_map' in kwargs: kwargs['gene_map'] = None
 
 
 @app.route('/de_novo', method='GET')
@@ -294,6 +295,7 @@ def overlap():
         over = GeminiQuery.GeminiQuery(database)
         over._set_gemini_browser(True)
         over.run(query_all)
+
         result = 'Results with: '
         if f_str != '': result += 'minimum overlap fraction = ' + f_str
         if recip != None: result += ' , reciprocal = ' + recip
@@ -328,31 +330,61 @@ def overlap():
     else:
         return template('overlap.j2', dbfile=database, maps_name = name)
 
-@app.route('/over_gene', method='GET')
+@app.route('/over_gene', method=['POST','GET'])
 def overlap_gene():
     import tool_overlap_gene
 
-    if request.GET.get('submit', '').strip():
-        res = tool_overlap_gene.overlap_gene_browser(database)
+    gene_map = request.files.get('genemap')
+    args = Arguments(db = database,gene_map = gene_map)
+    name_map = ''
+
+    if gene_map:
+        name, ext = os.path.splitext(gene_map.filename)
+
+        # control extension
+        if ext not in ('.txt'):
+            message = 'ERR: File extension of gene map file is not allowed.'
+            return template('over_gene.j2', message=message)
+
+        #save file
+        save_path = os.getcwd()
+        file_path = "{path}/{file}".format(path=save_path, file=gene_map.raw_filename)
+        gene_map.save(file_path,overwrite=True)
+        args.gene_map = gene_map.raw_filename
+
+
+    #bottom
+    if request.POST.get('submit', '').strip():
+        if gene_map != None:
+            res = tool_overlap_gene.overlap_custom_gene_browser(args)
+        else:
+            res = tool_overlap_gene.overlap_gene_browser(args)
+
         return template('over_gene.j2', rows=res)
 
-    elif request.GET.get('save', '').strip():
+
+    if request.POST.get('save', '').strip():
+
         tmp_file = 'overlap_gene_result.txt'
         tmp = open(tmp_file, 'w')
 
-        res = tool_overlap_gene.overlap_gene_browser(database)
+        print name_map
+        if name_map != '':
+            res = tool_overlap_gene.overlap_custom_gene_browser(args)
+        else:
+            res = tool_overlap_gene.overlap_gene_browser(args)
 
         for row in res:
             tmp.write(str(row)+'\n')
         tmp.close()
         return template('over_gene.j2', rows=res)
 
-    elif request.GET.get('heatmap','').strip():
-        tool_overlap_gene.heatmap(database)
+    elif request.POST.get('heatmap','').strip():
+        tool_overlap_gene.heatmap(args.db)
         name, ext = str(database).split('.')
     	path_name = os.getcwd() + '/'
         picture = path_name + name + '_overlap_gene.png'
-        webbrowser.open('file://' + picture)
+        webbrowser.open_new_tab('file://' + picture)
     else:
         return template('over_gene.j2')
 

@@ -2,6 +2,19 @@ import os
 import database
 from gemini.config import read_gemini_config
 
+class gene_custom_map:
+    def __init__(self,gene):
+        gen = [None if g == 'None' else g for g in gene]
+
+        self.chrom = gen[0]
+        self.start = gen[1]
+        self.end = gen[2]
+        self.gene_name = gen[3]
+
+    def __str__(self):
+        return ",".join([self.chrom, self.start,self.end,self.gene_name])
+
+
 class gene_detailed:
 
     def __init__(self, field):

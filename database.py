@@ -425,7 +425,7 @@ def create_tables(path, effect_fields=None):
     Middle_east integer,
     Native_american integer,
     Oceania integer,
-    South_american integer,"""
+    South_american integer,""",
     )
 
     # in the future this will be replaced by reading from the conf file.
@@ -488,6 +488,17 @@ def create_sample_table(cursor, metadata, args):
             cols.append(sql.Column(field, sql.TEXT))
 
     t = sql.Table("samples", metadata, *cols)
+    t.drop(checkfirst=True)
+    metadata.create_all(tables=[t])
+
+def create_gene_custom_table(cursor,metadata,args):
+    #cursor.execute('''DROP TABLE if exists gene_custom_map ''')
+    cols = [sql.Column("uid", sql.Integer, primary_key=True),
+            sql.Column("chrom", sql.TEXT),
+            sql.Column("start", sql.Integer),
+            sql.Column("end", sql.Integer),
+            sql.Column("gene_name", sql.TEXT)]
+    t = sql.Table("gene_custom_map", metadata, *cols,extend_existing=True)
     t.drop(checkfirst=True)
     metadata.create_all(tables=[t])
 
@@ -620,7 +631,7 @@ def insert_version(session, metadata, version):
     session.execute(t.insert(), dict(version=version))
     session.commit()
 
-def gen_dgvmap(cols,table_contents):
+def gen_map(cols,table_contents):
     for row in table_contents:
         d = dict(zip(cols,row))
         yield d
@@ -629,14 +640,21 @@ def insert_dgv_map(session, metadata, dgvmap):
     """Populate table of DGVmap with selected map"""
     t = metadata.tables['dgv_map']
     cols = _get_cols(t)
-    session.execute(t.insert(),list(gen_dgvmap(cols, dgvmap)))
+    session.execute(t.insert(),list(gen_map(cols, dgvmap)))
     session.commit()
 
 def insert_overlap(session, metadata, overlap):
     """Populate overlap results"""
     t = metadata.tables['overlap']
     cols = _get_cols(t)
-    session.execute(t.insert(), list(gen_dgvmap(cols, overlap)))
+    session.execute(t.insert(), list(gen_map(cols, overlap)))
+    session.commit()
+
+def insert_gene_custom_map(session,metadata,gene_custom_map):
+    """Populate a table with a custom gene map"""
+    t = metadata.tables['gene_custom_map']
+    cols = _get_cols(t)
+    session.execute(t.insert(),list(gen_map(cols, gene_custom_map)))
     session.commit()
 
 def empty_overlap_table(session,metadata):

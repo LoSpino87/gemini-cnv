@@ -9,34 +9,42 @@ import sys
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import sqlalchemy as sql
 
 # Gemini imports
 import GeminiQuery
+import gene_table
+import database
 
-gene = []
-alt = []
+gene = list()
+alt = list()
 samples = []
-result = []
+
+query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene, g.ensembl_gene_id, g.synonym
+			from variants_cnv v, gene_view g
+			where g.chrom == v.chrom
+			and g.transcript_min_start >= v.start
+			and g.transcript_max_end <= v.end
+			order by g.gene"""
 
 def run(parser, args):
 	if os.path.exists(args.db):
-		overlap_gene_main(args)
+		if args.gene_map:
+			overlap_custom_gene(args)
+		else:
+			overlap_gene_main(args)
 		samples = sample_name(database = args.db)
 
+
 def overlap_gene_main(args):
-	import numpy as np
 	"""
 	A function to view the overlap between gene and CNV
 	"""
-	args.query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene, g.ensembl_gene_id, g.synonym
-				from variants_cnv v, gene_view g
-				where g.chrom == v.chrom
-				and g.transcript_min_start >= v.start
-				and g.transcript_max_end <= v.end
-				order by g.gene"""
+	gene[:] = []
+	alt[:] = []
 
 	res = GeminiQuery.GeminiQuery(args.db)
-	res.run(args.query)
+	res.run(query)
 
 	for row in res:
 		gene.append(str(row['gene']))
@@ -49,18 +57,15 @@ def overlap_gene_main(args):
 		heatmap(database=args.db)
 
 
-def overlap_gene_browser(database):
-
+def overlap_gene_browser(args):
 	"""
 	A function to view the overlap between gene and CNV
 	"""
-	query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene, g.ensembl_gene_id, g.synonym
-				from variants_cnv v, gene_view g
-				where g.chrom == v.chrom
-				and g.transcript_min_start >= v.start
-				and g.transcript_max_end <= v.end
-				order by g.gene"""
-	res = GeminiQuery.GeminiQuery(database)
+	result = []
+	gene[:] = []
+	alt[:] = []
+
+	res = GeminiQuery.GeminiQuery(args.db)
 	res._set_gemini_browser(True)
 	res.run(query)
 
@@ -72,6 +77,91 @@ def overlap_gene_browser(database):
 		result.append(row)
 
 	return result
+
+#######################################
+## use a custom gene map to the join ##
+# tabed: chrom, start, end, gene_name #
+#######################################
+
+
+query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene_name
+			from variants_cnv v, gene_custom_map g
+			where g.chrom == v.chrom
+			and g.start >= v.start
+			and g.end <= v.end
+			order by g.gene_name"""
+
+def overlap_custom_gene(args):
+	get_gene_map(args=args)
+
+	gene[:] = []
+	alt[:] = []
+
+	res = GeminiQuery.GeminiQuery(args.db)
+	res.run(query_custom)
+
+	for row in res:
+		gene.append(str(row['gene_name']))
+		if row['alt'] == 'DUP':
+			alt.append(1)
+		else: alt.append(-1)
+		print row
+
+	if args.heatmap:
+		heatmap(database=args.db)
+
+
+def overlap_custom_gene_browser(args):
+	"""
+	A function to view the overlap between gene and CNV
+	"""
+
+	gene[:] = []
+	alt[:] = []
+	result = []
+
+	res = GeminiQuery.GeminiQuery(args.db)
+	res._set_gemini_browser(True)
+	res.run(query_custom)
+
+	for row in res:
+		gene.append(str(row['gene_name']))
+		if row['alt'] == 'DUP':
+			alt.append(1)
+		else: alt.append(-1)
+		result.append(row)
+
+	return result
+
+
+def get_gene_map(args):
+	"""
+	Define a custom gene map table
+	"""
+	c, metadata = database.get_session_metadata(args.db)
+	# drop table if already exists
+	c.execute("DROP TABLE if exists gene_custom_map")
+	#database.clear_custom_map(c,metadata)
+	# create table
+	database.create_gene_custom_table(c,metadata,args)
+	#unique identifier for each entry
+	i = 0
+	contents = gene_map_c = []
+
+	with open(args.gene_map,'r') as g:
+		next(g)
+		for line in g:
+			col = line.strip().split("\t")
+			table = gene_table.gene_custom_map(col)
+			i += 1
+			gene_map_c = [str(i),table.chrom,table.start,table.end,table.gene_name]
+			contents.append(gene_map_c)
+			if i % 1000 == 0:
+				database.insert_gene_custom_map(c,metadata, contents)
+				contents = []
+		database.insert_gene_custom_map(c, metadata, contents)
+		database.insert_resources(c,metadata, {('gene_custom_map',str(args.gene_map))})
+
 
 def sample_name(database):
 	names = []

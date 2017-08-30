@@ -4,21 +4,26 @@
 
 {% block body %}
 <div class='row page'>
-	<form class="well span6 offset3">
+
+
+	<form id = 'ha' action = '/over_gene' method="POST" class="well span6 offset3" enctype="multipart/form-data">
+
 		<div class="row">
 			<div class="span3">
 				<p>
-        <h3>Search <em>overlap CNVs</em> with version 75 of Ensembl genes table</h3>
+        <h3>Search <em>overlap CNVs</em> with Ensembl 75 version genes table</h3>
 				<em><strong>{{dbfile}}</strong></em>
 				</p>
+				<b><i>{{message}}</i></b>
 			</div>
 			<div class="span2 offset1">
 				<img src="/static/img/gemini.png" width="150px" class="img-rounded">
 			</div>
 		</div>
-		<hr>
 
-
+		<br>
+		You can load a custom map   <i>(chrom, start, end, gene  name): </i>
+		<input type="file" name="genemap" />
 		<div class="control-group">
  			<div class="controls">
  				<button type="submit" class="btn btn-large btn-primary" name="submit" value="submit">Submit</button>
@@ -26,12 +31,11 @@
 				<button type="submit" class="btn btn-large btn-success" name="heatmap" value="save">Heatmap</button>
 			</div>
 		</div>
-
 	</form>
 
 
 	<div class="span12 table-wrapper">
-		<table class='table table-striped table-hover table-condensed' data-provides="rowlink">
+		<table class='table table-striped table-hover table-condensed'>
 			<tbody>
 				{%for row in rows %}
 	           {% if loop.index0 == 0 %}
@@ -41,18 +45,18 @@
 	                {% endfor %}
 	            </tr>
 	            {% endif %}
+
 							<tr>
 								{%for col in row %}
 									<td>{{ row[col]}}</td>
-									{% endfor %}
-								</tr>
+								{% endfor %}
+							</tr>
 
 				{% endfor %}
 			</tbody>
 		</table>
 	</div> <!-- end of debug-pane -->
 
-
-</div><!-- end of page -->
+</div>
 
 {% endblock %}

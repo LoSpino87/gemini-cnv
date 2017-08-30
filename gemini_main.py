@@ -1266,13 +1266,16 @@ def main():
     parser_overlap.set_defaults(func=overlap_fn)
 
     #######################################################
-    # gemini e
+    # gemini overlap_gene
     #######################################################
     parser_overlap_gene = subparsers.add_parser('overlap_gene',
                 help = 'Overlap tools between Gene_summary table and Variants_cnv')
     parser_overlap_gene.add_argument('db',
                 metavar = 'db',
                 help = 'The name of the database over run overlap tool')
+    parser_overlap_gene.add_argument('-l',
+                dest = 'gene_map',
+                help = 'Load a custom gene map [chrom, start, end, gene_name, gene_stable_id]')
     parser_overlap_gene.add_argument('--heatmap',
                 dest = 'heatmap',
                 action = 'store_true',
