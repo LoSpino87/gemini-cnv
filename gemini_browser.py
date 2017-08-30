@@ -336,7 +336,7 @@ def overlap_gene():
 
     gene_map = request.files.get('genemap')
     args = Arguments(db = database,gene_map = gene_map)
-    name_map = ''
+    name_map = 'Ensembl 75 version'
 
     if gene_map:
         name, ext = os.path.splitext(gene_map.filename)
@@ -351,6 +351,7 @@ def overlap_gene():
         file_path = "{path}/{file}".format(path=save_path, file=gene_map.raw_filename)
         gene_map.save(file_path,overwrite=True)
         args.gene_map = gene_map.raw_filename
+        name_map = gene_map.raw_filename
 
 
     #bottom
@@ -360,7 +361,7 @@ def overlap_gene():
         else:
             res = tool_overlap_gene.overlap_gene_browser(args)
 
-        return template('over_gene.j2', rows=res)
+        return template('over_gene.j2', rows=res, name_map = name_map)
 
 
     if request.POST.get('save', '').strip():
@@ -368,8 +369,7 @@ def overlap_gene():
         tmp_file = 'overlap_gene_result.txt'
         tmp = open(tmp_file, 'w')
 
-        print name_map
-        if name_map != '':
+        if gene_map != None:
             res = tool_overlap_gene.overlap_custom_gene_browser(args)
         else:
             res = tool_overlap_gene.overlap_gene_browser(args)
@@ -377,7 +377,7 @@ def overlap_gene():
         for row in res:
             tmp.write(str(row)+'\n')
         tmp.close()
-        return template('over_gene.j2', rows=res)
+        return template('over_gene.j2', rows=res, name_map = name_map)
 
     elif request.POST.get('heatmap','').strip():
         tool_overlap_gene.heatmap(args.db)
@@ -386,7 +386,7 @@ def overlap_gene():
         picture = path_name + name + '_overlap_gene.png'
         webbrowser.open_new_tab('file://' + picture)
     else:
-        return template('over_gene.j2')
+        return template('over_gene.j2', name_map= name_map)
 
 
 ### loading wizard ###
