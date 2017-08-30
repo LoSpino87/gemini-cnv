@@ -337,7 +337,7 @@ def overlap_gene():
     gene_map = request.files.get('genemap')
     args = Arguments(db = database,gene_map = gene_map)
     name_map = 'Ensembl 75 version'
-
+    
     if gene_map:
         name, ext = os.path.splitext(gene_map.filename)
 

@@ -133,7 +133,6 @@ def overlap_custom_gene_browser(args):
 
 	return result
 
-
 def get_gene_map(args):
 	"""
 	Define a custom gene map table
@@ -141,7 +140,6 @@ def get_gene_map(args):
 	c, metadata = database.get_session_metadata(args.db)
 	# drop table if already exists
 	c.execute("DROP TABLE if exists gene_custom_map")
-	#database.clear_custom_map(c,metadata)
 	# create table
 	database.create_gene_custom_table(c,metadata,args)
 	#unique identifier for each entry
@@ -160,7 +158,6 @@ def get_gene_map(args):
 				database.insert_gene_custom_map(c,metadata, contents)
 				contents = []
 		database.insert_gene_custom_map(c, metadata, contents)
-		database.insert_resources(c,metadata, {('gene_custom_map',str(args.gene_map))})
 
 
 def sample_name(database):
