@@ -335,9 +335,10 @@ def overlap_gene():
     import tool_overlap_gene
 
     gene_map = request.files.get('genemap')
+    gen_check = request.POST.get('gen_check')
     args = Arguments(db = database,gene_map = gene_map)
     name_map = 'Ensembl 75 version'
-    
+
     if gene_map:
         name, ext = os.path.splitext(gene_map.filename)
 
@@ -357,11 +358,12 @@ def overlap_gene():
     #bottom
     if request.POST.get('submit', '').strip():
         if gene_map != None:
+            tool_overlap_gene.get_gene_map(args=args)
             res = tool_overlap_gene.overlap_custom_gene_browser(args)
         else:
             res = tool_overlap_gene.overlap_gene_browser(args)
 
-        return template('over_gene.j2', rows=res, name_map = name_map)
+        return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check)
 
 
     if request.POST.get('save', '').strip():
@@ -369,15 +371,16 @@ def overlap_gene():
         tmp_file = 'overlap_gene_result.txt'
         tmp = open(tmp_file, 'w')
 
-        if gene_map != None:
+        if gen_check != None:
             res = tool_overlap_gene.overlap_custom_gene_browser(args)
+            name_map = "custom map"
         else:
             res = tool_overlap_gene.overlap_gene_browser(args)
 
         for row in res:
             tmp.write(str(row)+'\n')
         tmp.close()
-        return template('over_gene.j2', rows=res, name_map = name_map)
+        return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check)
 
     elif request.POST.get('heatmap','').strip():
         tool_overlap_gene.heatmap(args.db)
