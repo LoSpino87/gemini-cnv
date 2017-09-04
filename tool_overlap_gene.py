@@ -50,7 +50,10 @@ def overlap_gene_main(args):
 		gene.append(str(row['gene']))
 		if row['alt'] == 'DUP':
 			alt.append(1)
-		else: alt.append(-1)
+		elif row['alt'] == 'DEL':
+			alt.append(-1)
+		else:
+			alt.append(0)
 		print row
 
 	if args.heatmap:
@@ -73,7 +76,10 @@ def overlap_gene_browser(args):
 		gene.append(str(row['gene']))
 		if row['alt'] == 'DUP':
 			alt.append(1)
-		else: alt.append(-1)
+		elif row['alt'] == 'DEL':
+			alt.append(-1)
+		else:
+			alt.append(0)
 		result.append(row)
 
 	return result
@@ -104,7 +110,10 @@ def overlap_custom_gene(args):
 		gene.append(str(row['gene_name']))
 		if row['alt'] == 'DUP':
 			alt.append(1)
-		else: alt.append(-1)
+		elif row['alt'] == 'DEL':
+			alt.append(-1)
+		else:
+			alt.append(0)
 		print row
 
 	if args.heatmap:
@@ -128,7 +137,10 @@ def overlap_custom_gene_browser(args):
 		gene.append(str(row['gene_name']))
 		if row['alt'] == 'DUP':
 			alt.append(1)
-		else: alt.append(-1)
+		elif row['alt'] == 'DEL':
+			alt.append(-1)
+		else:
+			alt.append(0)
 		result.append(row)
 
 	return result

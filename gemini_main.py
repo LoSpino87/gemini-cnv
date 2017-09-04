@@ -1275,7 +1275,7 @@ def main():
                 help = 'The name of the database over run overlap tool')
     parser_overlap_gene.add_argument('-l',
                 dest = 'gene_map',
-                help = 'Load a custom gene map [chrom, start, end, gene_name, gene_stable_id]')
+                help = 'Load a custom gene map [chrom, start, end, gene_name]')
     parser_overlap_gene.add_argument('--heatmap',
                 dest = 'heatmap',
                 action = 'store_true',

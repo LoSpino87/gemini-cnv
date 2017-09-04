@@ -453,7 +453,7 @@ def wizin():
     if ped_file:
         name, ext = os.path.splitext(ped_file.filename)
         # control extension
-        if ext !='.txt':
+        if ext !='.ped':
             message = 'File extension of PED file  is not allowed.'
             return template('wizin.j2', message=message)
 
