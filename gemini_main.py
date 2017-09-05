@@ -1276,6 +1276,9 @@ def main():
     parser_overlap_gene.add_argument('-l',
                 dest = 'gene_map',
                 help = 'Load a custom gene map [chrom, start, end, gene_name]')
+    parser_overlap_gene.add_argument('-s',
+                dest = 'sample',
+                help = 'Select a specific sample to annotate')
     parser_overlap_gene.add_argument('--heatmap',
                 dest = 'heatmap',
                 action = 'store_true',

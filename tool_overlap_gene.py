@@ -20,21 +20,14 @@ gene = list()
 alt = list()
 samples = []
 
-query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene, g.ensembl_gene_id, g.synonym
-			from variants_cnv v, gene_view g
-			where g.chrom == v.chrom
-			and g.transcript_min_start >= v.start
-			and g.transcript_max_end <= v.end
-			order by g.gene"""
-
 def run(parser, args):
 	if os.path.exists(args.db):
+		samples = sample_name(database = args.db)
+
 		if args.gene_map:
 			overlap_custom_gene(args)
 		else:
 			overlap_gene_main(args)
-		samples = sample_name(database = args.db)
-
 
 def overlap_gene_main(args):
 	"""
@@ -42,9 +35,25 @@ def overlap_gene_main(args):
 	"""
 	gene[:] = []
 	alt[:] = []
+	if args.sample:
+		gt_filter  = "gts." + str(args.sample) + " != './.' "
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, gts.""" + str(args.sample) + """, g.gene, g.ensembl_gene_id, g.synonym
+					from variants_cnv v, gene_view g
+					where g.chrom == v.chrom
+					and g.transcript_min_start >= v.start
+					and g.transcript_max_end <= v.end
+					order by g.gene"""
+	else :
+		gt_filter = None
+		query = query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene, g.ensembl_gene_id, g.synonym
+					from variants_cnv v, gene_view g
+					where g.chrom == v.chrom
+					and g.transcript_min_start >= v.start
+					and g.transcript_max_end <= v.end
+					order by g.gene"""
 
 	res = GeminiQuery.GeminiQuery(args.db)
-	res.run(query)
+	res.run(query,gt_filter)
 
 	for row in res:
 		gene.append(str(row['gene']))
@@ -68,9 +77,26 @@ def overlap_gene_browser(args):
 	gene[:] = []
 	alt[:] = []
 
+	if args.sample:
+		gt_filter  = "gts." + str(args.sample) + " != './.' "
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, gts.""" + str(args.sample) + """, g.gene, g.ensembl_gene_id, g.synonym
+					from variants_cnv v, gene_view g
+					where g.chrom == v.chrom
+					and g.transcript_min_start >= v.start
+					and g.transcript_max_end <= v.end
+					order by g.gene"""
+	else :
+		gt_filter = None
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene, g.ensembl_gene_id, g.synonym
+					from variants_cnv v, gene_view g
+					where g.chrom == v.chrom
+					and g.transcript_min_start >= v.start
+					and g.transcript_max_end <= v.end
+					order by g.gene"""
+
 	res = GeminiQuery.GeminiQuery(args.db)
 	res._set_gemini_browser(True)
-	res.run(query)
+	res.run(query,gt_filter)
 
 	for row in res:
 		gene.append(str(row['gene']))
@@ -89,22 +115,31 @@ def overlap_gene_browser(args):
 # tabed: chrom, start, end, gene_name #
 #######################################
 
-
-query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene_name
-			from variants_cnv v, gene_custom_map g
-			where g.chrom == v.chrom
-			and g.start >= v.start
-			and g.end <= v.end
-			order by g.gene_name"""
-
 def overlap_custom_gene(args):
 	get_gene_map(args=args)
 
 	gene[:] = []
 	alt[:] = []
 
+	if args.sample:
+		gt_filter  = "gts." + str(args.sample) + " != './.' "
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, gts.""" + str(args.sample) + """, g.gene_name
+					from variants_cnv v, gene_custom_map g
+					where g.chrom == v.chrom
+					and g.start >= v.start
+					and g.end <= v.end
+					order by g.gene_name"""
+	else :
+		gt_filter = None
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene_name
+					from variants_cnv v, gene_custom_map g
+					where g.chrom == v.chrom
+					and g.start >= v.start
+					and g.end <= v.end
+					order by g.gene_name"""
+
 	res = GeminiQuery.GeminiQuery(args.db)
-	res.run(query_custom)
+	res.run(query_custom,gt_filter)
 
 	for row in res:
 		gene.append(str(row['gene_name']))
@@ -129,9 +164,26 @@ def overlap_custom_gene_browser(args):
 	alt[:] = []
 	result = []
 
+	if args.sample:
+		gt_filter  = "gts." + str(args.sample) + " != './.' "
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, gts.""" + str(args.sample) + """, g.gene_name
+					from variants_cnv v, gene_custom_map g
+					where g.chrom == v.chrom
+					and g.start >= v.start
+					and g.end <= v.end
+					order by g.gene_name"""
+	else :
+		gt_filter = None
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene_name
+					from variants_cnv v, gene_custom_map g
+					where g.chrom == v.chrom
+					and g.start >= v.start
+					and g.end <= v.end
+					order by g.gene_name"""
+
 	res = GeminiQuery.GeminiQuery(args.db)
 	res._set_gemini_browser(True)
-	res.run(query_custom)
+	res.run(query_custom,gt_filter)
 
 	for row in res:
 		gene.append(str(row['gene_name']))
@@ -178,7 +230,7 @@ def sample_name(database):
 	name = GeminiQuery.GeminiQuery(database)
 	name.run(query)
 	for n in name:
-		names.append(n)
+		names.append(str(n))
 	return names
 
 def heatmap(database):

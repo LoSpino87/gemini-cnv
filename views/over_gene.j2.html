@@ -25,6 +25,8 @@
 		<input type="checkbox" name="gen_check" value="on" {{'checked="checked"' if gen_check else ""}}/>
 		You can load a custom map   <i>(chrom, start, end, gene  name): </i>
 		<input type="file" name="genemap" />
+		<br>
+		You can select a specific sample: <textarea rows="1" type="text" name="sample">{{sample}}</textarea>
 		<div class="control-group">
  			<div class="controls">
  				<button type="submit" class="btn btn-large btn-primary" name="submit" value="submit">Submit</button>

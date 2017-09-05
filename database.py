@@ -99,9 +99,7 @@ def create_gene_view(cursor):
                         UNION
                         SELECT * from gene_summary where is_hgnc=='1' group by ensembl_gene_id having count(*)>1
                     ''')
-
-
-
+                    
 def get_path(path):
     if "://" not in path:
         if not (os.path.exists(path) or os.access(os.path.dirname(os.path.abspath(path)), os.W_OK)):

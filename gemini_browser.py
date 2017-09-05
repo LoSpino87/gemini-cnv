@@ -208,6 +208,7 @@ class Arguments(object):
         if not 'int_len_max' in kwargs: kwargs['int_len_max'] = None
         self.__dict__.update(**kwargs)
         if not 'gene_map' in kwargs: kwargs['gene_map'] = None
+        if not 'sample' in kwargs: kwargs['sample'] = None
 
 
 @app.route('/de_novo', method='GET')
@@ -336,7 +337,9 @@ def overlap_gene():
 
     gene_map = request.files.get('genemap')
     gen_check = request.POST.get('gen_check')
-    args = Arguments(db = database,gene_map = gene_map)
+    sample = request.POST.get('sample')
+
+    args = Arguments(db = database,gene_map = gene_map,sample = sample)
     name_map = 'Ensembl 75 version'
 
     if gene_map:
@@ -363,7 +366,7 @@ def overlap_gene():
         else:
             res = tool_overlap_gene.overlap_gene_browser(args)
 
-        return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check)
+        return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check, sample = args.sample)
 
 
     if request.POST.get('save', '').strip():
@@ -380,7 +383,7 @@ def overlap_gene():
         for row in res:
             tmp.write(str(row)+'\n')
         tmp.close()
-        return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check)
+        return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check, sample = args.sample)
 
     elif request.POST.get('heatmap','').strip():
         tool_overlap_gene.heatmap(args.db)
