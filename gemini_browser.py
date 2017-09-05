@@ -335,6 +335,12 @@ def overlap():
 def overlap_gene():
     import tool_overlap_gene
 
+    rows_sample_query = 'select name, paternal_id, maternal_id from samples'
+    rows_sample = GeminiQuery.GeminiQuery(database)
+    rows_sample._set_gemini_browser(True)
+    rows_sample.run(rows_sample_query)
+
+
     gene_map = request.files.get('genemap')
     gen_check = request.POST.get('gen_check')
     sample = request.POST.get('sample')
@@ -366,7 +372,7 @@ def overlap_gene():
         else:
             res = tool_overlap_gene.overlap_gene_browser(args)
 
-        return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check, sample = args.sample)
+        return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check, sample = args.sample, rows_sample=rows_sample)
 
 
     if request.POST.get('save', '').strip():
@@ -383,7 +389,7 @@ def overlap_gene():
         for row in res:
             tmp.write(str(row)+'\n')
         tmp.close()
-        return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check, sample = args.sample)
+        return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check, sample = args.sample, rows_sample=rows_sample)
 
     elif request.POST.get('heatmap','').strip():
         tool_overlap_gene.heatmap(args.db)
@@ -392,7 +398,7 @@ def overlap_gene():
         picture = path_name + name + '_overlap_gene.png'
         webbrowser.open_new_tab('file://' + picture)
     else:
-        return template('over_gene.j2', name_map= name_map)
+        return template('over_gene.j2', name_map= name_map, rows_sample = rows_sample)
 
 
 ### loading wizard ###
