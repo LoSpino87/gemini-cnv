@@ -39,8 +39,11 @@ def overlap_main(args):
 def extract_data(args):
 	# extract data from variants table and create relative BED object
 	if args.sample:
-		gt_filter  = "gts." + str(args.sample) + " != './.' "
-		args.query = """select chrom, start, end, alt, gts.""" + str(args.sample) + """ from variants_cnv"""
+		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
+		print gt_col
+		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
+		print gt_filter
+		args.query = """select chrom, start, end, alt, """ + gt_col + """ from variants_cnv"""
 	else :
 		gt_filter = None
 		args.query = 'select chrom, start, end, alt from variants_cnv'
@@ -50,7 +53,7 @@ def extract_data(args):
 	var_string = ""
 	for i in VAR:
 		if args.sample:
-			i = "\t".join([x for x in str(i).split('\t')[:-1]])
+			i = "\t".join([x for x in str(i).split('\t')[:4]])
 
 		var_string = var_string + "\n" + str(i)
 

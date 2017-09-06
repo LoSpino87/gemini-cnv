@@ -36,8 +36,9 @@ def overlap_gene_main(args):
 	gene[:] = []
 	alt[:] = []
 	if args.sample:
-		gt_filter  = "gts." + str(args.sample) + " != './.' "
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, gts.""" + str(args.sample) + """, g.gene, g.ensembl_gene_id, g.synonym
+		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
+		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.ensembl_gene_id, g.synonym
 					from variants_cnv v, gene_view g
 					where g.chrom == v.chrom
 					and g.transcript_min_start >= v.start
@@ -78,8 +79,9 @@ def overlap_gene_browser(args):
 	alt[:] = []
 
 	if args.sample:
-		gt_filter  = "gts." + str(args.sample) + " != './.' "
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, gts.""" + str(args.sample) + """, g.gene, g.ensembl_gene_id, g.synonym
+		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
+		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.ensembl_gene_id, g.synonym
 					from variants_cnv v, gene_view g
 					where g.chrom == v.chrom
 					and g.transcript_min_start >= v.start
@@ -122,8 +124,9 @@ def overlap_custom_gene(args):
 	alt[:] = []
 
 	if args.sample:
-		gt_filter  = "gts." + str(args.sample) + " != './.' "
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, gts.""" + str(args.sample) + """, g.gene_name
+		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
+		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.ensembl_gene_id, g.synonym
 					from variants_cnv v, gene_custom_map g
 					where g.chrom == v.chrom
 					and g.start >= v.start
@@ -165,8 +168,9 @@ def overlap_custom_gene_browser(args):
 	result = []
 
 	if args.sample:
-		gt_filter  = "gts." + str(args.sample) + " != './.' "
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, gts.""" + str(args.sample) + """, g.gene_name
+		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
+		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.ensembl_gene_id, g.synonym
 					from variants_cnv v, gene_custom_map g
 					where g.chrom == v.chrom
 					and g.start >= v.start
