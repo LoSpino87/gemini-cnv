@@ -39,6 +39,16 @@ app = Bottle()
 static_folder = 'static'
 _static_folder = os.path.join(os.path.dirname(__file__), static_folder)
 
+def name_sample(database):
+	samples = []
+	rows_sample_query = 'select name, paternal_id, maternal_id from samples'
+	rows_sample = GeminiQuery.GeminiQuery(database)
+	rows_sample._set_gemini_browser(True)
+	rows_sample.run(rows_sample_query)
+	for row in rows_sample:
+		samples.append(row)
+	return samples
+
 @app.route('/stats/region/:chrom', method='GET')
 def stats_region(chrom):
     # Note: chrom is give as an argument
@@ -209,6 +219,7 @@ class Arguments(object):
         self.__dict__.update(**kwargs)
         if not 'gene_map' in kwargs: kwargs['gene_map'] = None
         if not 'sample' in kwargs: kwargs['sample'] = None
+        if not 'v' in kwargs: kwargs['v'] = None
 
 
 @app.route('/de_novo', method='GET')
@@ -270,30 +281,31 @@ def db_schema():
 def overlap():
     import tool_overlap
 
-    name = " no map "
-    q_name = "SELECT resource FROM resources WHERE name='dgv_cnvmap'"
-    nm = GeminiQuery.GeminiQuery(database)
-    nm.run(q_name)
-    for n in nm:
-        name = n
+    name = tool_overlap.name_dgv(database=database)
+    if name == None:
+        name = 'no map'
+
+    rows_sample = name_sample(database=database)
+
+    f_str = str(request.GET.get('f','').strip())
+    recip = request.GET.get('reciprocal')
+    len_min = str(request.GET.get('int_len_min','').strip())
+    len_max = str(request.GET.get('int_len_max','').strip())
+    alt = str(request.GET.get('alt_par','').strip())
+    sample = request.GET.get('sample')
+    invert = request.GET.get('invert')
+
+    args = Arguments(db=database, f_par = f_str, int_len_min = len_min, int_len_max = len_max, alt_par=alt,sample = sample, v = invert)
+
+    if recip != None:
+        args.r = True
 
 
     # user clicked the "submit" button
     if request.GET.get('submit', '').strip():
-
-        f_str = str(request.GET.get('f').strip())
-        recip = request.GET.get('reciprocal')
-        len_min = str(request.GET.get('int_len_min').strip())
-        len_max = str(request.GET.get('int_len_max').strip())
-        alt = str(request.GET.get('alt_par').strip())
-        if recip == None:
-            args = Arguments(db=database, f_par = f_str, int_len_min = len_min, int_len_max = len_max, alt_par=alt)
-        else:
-            args = Arguments(db=database, f_par = f_str, r = True, int_len_min = len_min, int_len_max = len_max, alt_par=alt)
-
         tool_overlap.overlap(args)
         query_all = "SELECT * FROM overlap"
-        over = GeminiQuery.GeminiQuery(database)
+        over = GeminiQuery.GeminiQuery(args.db)
         over._set_gemini_browser(True)
         over.run(query_all)
 
@@ -304,7 +316,7 @@ def overlap():
         if len_max != '': result += ' , maximum overlap length = ' + len_max
         if alt != '': result += ', alteration = ' + alt
         else: result += ' -'
-        return template('overlap.j2', dbfile=database, rows=over, maps_name = name, results = result, reciprocal = recip)
+        return template('overlap.j2', dbfile=database, rows=over, maps_name = name, results = result, reciprocal = recip, rows_sample = rows_sample)
 
     # user clicked the "save as a text file" button
     elif request.GET.get('save', '').strip():
@@ -329,21 +341,17 @@ def overlap():
         tmp.close()
         return template('overlap.j2', dbfile=database, rows=result, maps_name = name)
     else:
-        return template('overlap.j2', dbfile=database, maps_name = name)
+        return template('overlap.j2', dbfile=database, maps_name = name, rows_sample = rows_sample )
 
 @app.route('/over_gene', method=['POST','GET'])
 def overlap_gene():
     import tool_overlap_gene
 
-    rows_sample_query = 'select name, paternal_id, maternal_id from samples'
-    rows_sample = GeminiQuery.GeminiQuery(database)
-    rows_sample._set_gemini_browser(True)
-    rows_sample.run(rows_sample_query)
-
-
     gene_map = request.files.get('genemap')
     gen_check = request.POST.get('gen_check')
     sample = request.POST.get('sample')
+
+    rows_sample = name_sample(database=database)
 
     args = Arguments(db = database,gene_map = gene_map,sample = sample)
     name_map = 'Ensembl 75 version'

@@ -20,6 +20,13 @@ def run(parser, args):
 	if os.path.exists(args.db):
 		overlap_main(args)
 
+def name_dgv(database):
+	name = "SELECT resource FROM resources WHERE name='dgv_cnvmap'"
+	nm = GeminiQuery.GeminiQuery(database)
+	nm.run(name)
+	for n in nm:
+		return n
+
 def overlap_main(args):
 	overlap(args)
 	args.query = "select * from overlap"
@@ -29,14 +36,24 @@ def overlap_main(args):
 	for row in res:
 		print row
 
-def overlap(args):
+def extract_data(args):
 	# extract data from variants table and create relative BED object
-	args.query = 'select chrom, start, end, alt from variants_cnv'
+	if args.sample:
+		gt_filter  = "gts." + str(args.sample) + " != './.' "
+		args.query = """select chrom, start, end, alt, gts.""" + str(args.sample) + """ from variants_cnv"""
+	else :
+		gt_filter = None
+		args.query = 'select chrom, start, end, alt from variants_cnv'
+
 	VAR = GeminiQuery.GeminiQuery(args.db)
-	VAR.run(args.query)
+	VAR.run(args.query,gt_filter)
 	var_string = ""
 	for i in VAR:
+		if args.sample:
+			i = "\t".join([x for x in str(i).split('\t')[:-1]])
+
 		var_string = var_string + "\n" + str(i)
+
 	var_bed = pybedtools.BedTool(var_string, from_string=True)
 
 
@@ -51,6 +68,12 @@ def overlap(args):
 	for i in CNV:
 		cnv_string = cnv_string + "\n" + str(i)
 	cnv_bed = pybedtools.BedTool(cnv_string, from_string=True)
+	return var_bed, cnv_bed
+
+
+def overlap(args):
+	# extract data
+	var_bed, cnv_bed = extract_data(args)
 
 	#overlap
 	var_and_cnv = []
@@ -101,6 +124,7 @@ def overlap(args):
 
 	database.empty_overlap_table(session=session,metadata=metadata)
 	database.insert_overlap(session=session, metadata=metadata, overlap = overlap_result)
+	database.close_and_commit(session=session)
 
 def overlap_filt_alt(args,result):
 	overlap_filt_a = []
@@ -133,9 +157,15 @@ def jaccard_index(interval,seq1,seq2):
     return index
 
 def overlap_fraction(args,var_bed,cnv_bed):
-	var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, wo = True)
+	if args.v:
+		var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, wo = True, v = True)
+	else:
+		var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, wo = True)
 	return var_and_cnv
 
 def overlap_reciprocal(args,var_bed,cnv_bed):
-	var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, r = True, wo = True)
+	if args.v:
+		var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, r = True, wo = True, v= True)
+	else:
+		var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, r = True, wo = True)
 	return var_and_cnv

@@ -13,7 +13,7 @@
 				</p>
 			</div>
 			<div class="span2 offset1">
-				<img src="/static/img/gemini.png" width="150px" class="img-rounded">
+				<img src="/static/img/gemini.png" width="80px" class="img-rounded">
 			</div>
 		</div>
 		<hr>
@@ -25,15 +25,48 @@
 		</div>
 		<div class="control-group">
 				<label class="checkbox" {display: inline-block};>
-					<!-- <input type="checkbox" name = ""> Reciprocal -->
 					<input type="checkbox" name="reciprocal" value="on" {{'checked="checked"' if reciprocal else ""}}/>Reciprocal
-
         	<br>
 					<strong>Note:</strong><em>  If checked, you must include a minimum overlap fraction</em>
+					<br>
+					<br>
+					<input type="checkbox" name="invert" value="on" {{'checked="checked"' if invert else ""}}/>Invert [no overlap variant]
 				</label>
 		</div>
+
 <hr>
 
+		<strong>Samples contained in VCF</strong>
+		<div>
+			<table class='table table-striped table-hover table-condensed'>
+				<tbody>
+					{%for row_s in rows_sample %}
+							 {% if loop.index0 == 0 %}
+								<tr>
+										{%for col_s in row_s %}
+										<th>{{col_s}}</th>
+										{% endfor %}
+								</tr>
+								{% endif %}
+
+								<tr>
+									{%for col_s in row_s %}
+										<td>{{ row_s[col_s]}}</td>
+									{% endfor %}
+								</tr>
+
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+
+		You can select a specific sample: <textarea rows="1" type="text" name="sample">{{sample}}</textarea>
+		<br>
+
+
+<hr>
+
+<form class="well span6 offset3">
 		<div>
 			<strong>Filter the overlap interval by length (min,max or a range)</strong>
 			<table>
@@ -56,11 +89,7 @@
 			<textarea name="results" style="display:none;">{{results}}</textarea>
 		</div>
 
-
-
-
-	</form>
-
+</form>
 
 <div class="span12 table-wrapper">
 	<table class='table table-striped table-hover table-condensed' data-provides="rowlink">

@@ -222,6 +222,7 @@ def get_gene_map(args):
 				database.insert_gene_custom_map(c,metadata, contents)
 				contents = []
 		database.insert_gene_custom_map(c, metadata, contents)
+		database.close_and_commit(c)
 
 
 def sample_name(database):
