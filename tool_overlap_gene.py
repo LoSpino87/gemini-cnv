@@ -31,6 +31,21 @@ def run(parser, args):
 		else:
 			overlap_gene_main(args)
 
+def extract_data(alt,row,sel_sample):
+	temp = []
+	for i in range(len(sel_sample)):
+		if row['gts'].take(i) != './.':
+			if row['alt'] == 'DUP':
+				temp.append(1)
+			elif row['alt'] == 'DEL':
+				temp.append(-1)
+			else:
+				temp.append(0)
+		else:
+			temp.append(0)
+	alt = np.concatenate((alt,[temp]),axis=0)
+	return alt, row
+
 def overlap_gene_main(args):
 	"""
 	A function to view the overlap between gene and CNV
@@ -64,23 +79,12 @@ def overlap_gene_main(args):
 
 	for row in res:
 		gene.append(str(row['gene']))
-		temp = []
-		for i,s in enumerate(sel_sample):
-			if row['gts'].take(i) != './.':
-				if row['alt'] == 'DUP':
-					temp.append(1)
-				elif row['alt'] == 'DEL':
-					temp.append(-1)
-				else:
-					temp.append(0)
-			else:
-				temp.append(0)
-		alt = np.concatenate((alt,[temp]),axis=0)
+		alt, row = extract_data(alt,row,sel_sample)
 		print row
 	alt = np.delete(alt,0,0)
 
 	if args.heatmap:
-		heatmap(database=args.db,alt=alt)
+		heatmap(database=args.db,alt=alt,gene=gene)
 
 
 def overlap_gene_browser(args):
@@ -119,7 +123,7 @@ def overlap_gene_browser(args):
 	for row in res:
 		gene.append(str(row['gene']))
 		temp = []
-		for i,s in enumerate(sel_sample):
+		for s in sel_sample:
 			if row['gts.'+str(s)] != './.':
 				if row['alt'] == 'DUP':
 					temp.append(1)
@@ -134,7 +138,7 @@ def overlap_gene_browser(args):
 
 	alt = np.delete(alt,0,0)
 
-	return alt, result
+	return gene, alt, result
 
 #######################################
 ## use a custom gene map to the join ##
@@ -169,27 +173,15 @@ def overlap_custom_gene(args):
 
 	gene[:] = []
 	alt = np.array([np.zeros(len(sel_sample))])
-	print sel_sample
 
 	for row in res:
 		gene.append(str(row['gene_name']))
-		temp = []
-		for i,s in enumerate(sel_sample):
-			if row['gts'].take(i) != './.':
-				if row['alt'] == 'DUP':
-					temp.append(1)
-				elif row['alt'] == 'DEL':
-					temp.append(-1)
-				else:
-					temp.append(0)
-			else:
-				temp.append(0)
-		alt = np.concatenate((alt,[temp]),axis=0)
+		alt, row = extract_data(alt,row,sel_sample)
 		print row
 	alt = np.delete(alt,0,0)
 
 	if args.heatmap:
-		heatmap(database=args.db,alt=alt)
+		heatmap(database=args.db,alt=alt,gene = gene)
 
 
 def overlap_custom_gene_browser(args):
@@ -244,7 +236,7 @@ def overlap_custom_gene_browser(args):
 
 	alt = np.delete(alt,0,0)
 
-	return alt,result
+	return gene, alt, result
 
 def get_gene_map(args):
 	"""
@@ -283,7 +275,7 @@ def sample_name(database):
 		names.append(str(n))
 	return names
 
-def heatmap(database,alt):
+def heatmap(database,alt,gene):
 	import numpy as np
 	import seaborn as sb; sb.set()
 
