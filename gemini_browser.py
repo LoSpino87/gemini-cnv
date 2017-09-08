@@ -4,6 +4,7 @@ import webbrowser
 import subprocess
 import shutil
 from collections import namedtuple
+import numpy as np
 
 import GeminiQuery
 
@@ -346,6 +347,7 @@ def overlap():
 @app.route('/over_gene', method=['POST','GET'])
 def overlap_gene():
     import tool_overlap_gene
+    alt = np.array([])
 
     gene_map = request.files.get('genemap')
     gen_check = request.POST.get('gen_check')
@@ -376,9 +378,9 @@ def overlap_gene():
     if request.POST.get('submit', '').strip():
         if gene_map != None:
             tool_overlap_gene.get_gene_map(args=args)
-            res = tool_overlap_gene.overlap_custom_gene_browser(args)
+            alt,res = tool_overlap_gene.overlap_custom_gene_browser(args)
         else:
-            res = tool_overlap_gene.overlap_gene_browser(args)
+            alt,res = tool_overlap_gene.overlap_gene_browser(args)
 
         return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check, sample = args.sample, rows_sample=rows_sample)
 
@@ -389,10 +391,10 @@ def overlap_gene():
         tmp = open(tmp_file, 'w')
 
         if gen_check != None:
-            res = tool_overlap_gene.overlap_custom_gene_browser(args)
+            alt,res = tool_overlap_gene.overlap_custom_gene_browser(args)
             name_map = "custom map"
         else:
-            res = tool_overlap_gene.overlap_gene_browser(args)
+            alt,res = tool_overlap_gene.overlap_gene_browser(args)
 
         for row in res:
             tmp.write(str(row)+'\n')
@@ -400,7 +402,12 @@ def overlap_gene():
         return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check, sample = args.sample, rows_sample=rows_sample)
 
     elif request.POST.get('heatmap','').strip():
-        tool_overlap_gene.heatmap(args.db)
+        if gen_check != None:
+            alt,res = tool_overlap_gene.overlap_custom_gene_browser(args)
+        else:
+            alt,res = tool_overlap_gene.overlap_gene_browser(args)
+
+        tool_overlap_gene.heatmap(args.db,alt)
         name, ext = str(database).split('.')
     	path_name = os.getcwd() + '/'
         picture = path_name + name + '_overlap_gene.png'

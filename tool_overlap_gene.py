@@ -10,19 +10,21 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import sqlalchemy as sql
+import numpy as np
 
 # Gemini imports
 import GeminiQuery
 import gene_table
 import database
 
-gene = list()
-alt = list()
+gene = []
+alt = np.array([])
 samples = []
 
 def run(parser, args):
 	if os.path.exists(args.db):
 		samples = sample_name(database = args.db)
+
 
 		if args.gene_map:
 			overlap_custom_gene(args)
@@ -33,9 +35,9 @@ def overlap_gene_main(args):
 	"""
 	A function to view the overlap between gene and CNV
 	"""
-	gene[:] = []
-	alt[:] = []
+
 	if args.sample:
+		sel_sample = args.sample.split(',')
 		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
 		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
 		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.ensembl_gene_id, g.synonym
@@ -46,7 +48,8 @@ def overlap_gene_main(args):
 					order by g.gene"""
 	else :
 		gt_filter = None
-		query = query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene, g.ensembl_gene_id, g.synonym
+		sel_sample = sample_name(database = args.db)
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end,  (gts).(*),g.gene, g.ensembl_gene_id, g.synonym
 					from variants_cnv v, gene_view g
 					where g.chrom == v.chrom
 					and g.transcript_min_start >= v.start
@@ -56,18 +59,28 @@ def overlap_gene_main(args):
 	res = GeminiQuery.GeminiQuery(args.db)
 	res.run(query,gt_filter)
 
+	gene[:] = []
+	alt = np.array([np.zeros(len(sel_sample))])
+
 	for row in res:
 		gene.append(str(row['gene']))
-		if row['alt'] == 'DUP':
-			alt.append(1)
-		elif row['alt'] == 'DEL':
-			alt.append(-1)
-		else:
-			alt.append(0)
+		temp = []
+		for i,s in enumerate(sel_sample):
+			if row['gts'].take(i) != './.':
+				if row['alt'] == 'DUP':
+					temp.append(1)
+				elif row['alt'] == 'DEL':
+					temp.append(-1)
+				else:
+					temp.append(0)
+			else:
+				temp.append(0)
+		alt = np.concatenate((alt,[temp]),axis=0)
 		print row
+	alt = np.delete(alt,0,0)
 
 	if args.heatmap:
-		heatmap(database=args.db)
+		heatmap(database=args.db,alt=alt)
 
 
 def overlap_gene_browser(args):
@@ -75,10 +88,9 @@ def overlap_gene_browser(args):
 	A function to view the overlap between gene and CNV
 	"""
 	result = []
-	gene[:] = []
-	alt[:] = []
 
 	if args.sample:
+		sel_sample = args.sample.split(',')
 		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
 		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
 		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.ensembl_gene_id, g.synonym
@@ -89,7 +101,8 @@ def overlap_gene_browser(args):
 					order by g.gene"""
 	else :
 		gt_filter = None
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene, g.ensembl_gene_id, g.synonym
+		sel_sample = sample_name(database = args.db)
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end,  (gts).(*), g.gene, g.ensembl_gene_id, g.synonym
 					from variants_cnv v, gene_view g
 					where g.chrom == v.chrom
 					and g.transcript_min_start >= v.start
@@ -100,17 +113,28 @@ def overlap_gene_browser(args):
 	res._set_gemini_browser(True)
 	res.run(query,gt_filter)
 
+	gene[:] = []
+	alt = np.array([np.zeros(len(sel_sample))])
+
 	for row in res:
 		gene.append(str(row['gene']))
-		if row['alt'] == 'DUP':
-			alt.append(1)
-		elif row['alt'] == 'DEL':
-			alt.append(-1)
-		else:
-			alt.append(0)
+		temp = []
+		for i,s in enumerate(sel_sample):
+			if row['gts.'+str(s)] != './.':
+				if row['alt'] == 'DUP':
+					temp.append(1)
+				elif row['alt'] == 'DEL':
+					temp.append(-1)
+				else:
+					temp.append(0)
+			else:
+				temp.append(0)
+		alt = np.concatenate((alt,[temp]),axis=0)
 		result.append(row)
 
-	return result
+	alt = np.delete(alt,0,0)
+
+	return alt, result
 
 #######################################
 ## use a custom gene map to the join ##
@@ -120,13 +144,11 @@ def overlap_gene_browser(args):
 def overlap_custom_gene(args):
 	get_gene_map(args=args)
 
-	gene[:] = []
-	alt[:] = []
-
 	if args.sample:
+		sel_sample = args.sample.split(',')
 		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
 		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.ensembl_gene_id, g.synonym
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene_name
 					from variants_cnv v, gene_custom_map g
 					where g.chrom == v.chrom
 					and g.start >= v.start
@@ -134,7 +156,8 @@ def overlap_custom_gene(args):
 					order by g.gene_name"""
 	else :
 		gt_filter = None
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene_name
+		sel_sample = sample_name(database = args.db)
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, (gts).(*), g.gene_name
 					from variants_cnv v, gene_custom_map g
 					where g.chrom == v.chrom
 					and g.start >= v.start
@@ -144,18 +167,29 @@ def overlap_custom_gene(args):
 	res = GeminiQuery.GeminiQuery(args.db)
 	res.run(query_custom,gt_filter)
 
+	gene[:] = []
+	alt = np.array([np.zeros(len(sel_sample))])
+	print sel_sample
+
 	for row in res:
 		gene.append(str(row['gene_name']))
-		if row['alt'] == 'DUP':
-			alt.append(1)
-		elif row['alt'] == 'DEL':
-			alt.append(-1)
-		else:
-			alt.append(0)
+		temp = []
+		for i,s in enumerate(sel_sample):
+			if row['gts'].take(i) != './.':
+				if row['alt'] == 'DUP':
+					temp.append(1)
+				elif row['alt'] == 'DEL':
+					temp.append(-1)
+				else:
+					temp.append(0)
+			else:
+				temp.append(0)
+		alt = np.concatenate((alt,[temp]),axis=0)
 		print row
+	alt = np.delete(alt,0,0)
 
 	if args.heatmap:
-		heatmap(database=args.db)
+		heatmap(database=args.db,alt=alt)
 
 
 def overlap_custom_gene_browser(args):
@@ -163,14 +197,13 @@ def overlap_custom_gene_browser(args):
 	A function to view the overlap between gene and CNV
 	"""
 
-	gene[:] = []
-	alt[:] = []
 	result = []
 
 	if args.sample:
+		sel_sample = args.sample.split(',')
 		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
 		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.ensembl_gene_id, g.synonym
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene_name
 					from variants_cnv v, gene_custom_map g
 					where g.chrom == v.chrom
 					and g.start >= v.start
@@ -178,7 +211,8 @@ def overlap_custom_gene_browser(args):
 					order by g.gene_name"""
 	else :
 		gt_filter = None
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, g.gene_name
+		sel_sample = sample_name(database = args.db)
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, (gts).(*),g.gene_name
 					from variants_cnv v, gene_custom_map g
 					where g.chrom == v.chrom
 					and g.start >= v.start
@@ -189,17 +223,28 @@ def overlap_custom_gene_browser(args):
 	res._set_gemini_browser(True)
 	res.run(query_custom,gt_filter)
 
+	gene[:] = []
+	alt = np.array([np.zeros(len(sel_sample))])
+
 	for row in res:
 		gene.append(str(row['gene_name']))
-		if row['alt'] == 'DUP':
-			alt.append(1)
-		elif row['alt'] == 'DEL':
-			alt.append(-1)
-		else:
-			alt.append(0)
+		temp = []
+		for i,s in enumerate(sel_sample):
+			if row['gts.'+str(s)] != './.':
+				if row['alt'] == 'DUP':
+					temp.append(1)
+				elif row['alt'] == 'DEL':
+					temp.append(-1)
+				else:
+					temp.append(0)
+			else:
+				temp.append(0)
+		alt = np.concatenate((alt,[temp]),axis=0)
 		result.append(row)
 
-	return result
+	alt = np.delete(alt,0,0)
+
+	return alt,result
 
 def get_gene_map(args):
 	"""
@@ -238,19 +283,19 @@ def sample_name(database):
 		names.append(str(n))
 	return names
 
-def heatmap(database):
+def heatmap(database,alt):
 	import numpy as np
 	import seaborn as sb; sb.set()
 
+	sel_sample = sample_name(database)
 	alt_a = np.array(alt)
-	alt_a_T = alt_a[np.newaxis, :].T
 
 	# get the tick label font size
 	fontsize_pt = plt.rcParams['ytick.labelsize']
 	dpi = 72.27
 
 	# comput the matrix height in points and inches
-	matrix_height_pt = fontsize_pt * alt_a_T.shape[0]
+	matrix_height_pt = fontsize_pt * alt_a.shape[0]
 	matrix_height_in = matrix_height_pt / dpi
 
 	# compute the required figure height
@@ -265,8 +310,8 @@ def heatmap(database):
 	        gridspec_kw=dict(top=1-top_margin, bottom=bottom_margin))
 
 
-	ax = sb.heatmap(alt_a_T,linewidths=.2, ax=ax)
-	ax.set_xticklabels(samples)
+	ax = sb.heatmap(alt_a,linewidths=.2, ax=ax)
+	ax.set_xticklabels(sel_sample)
 	ax.set_yticklabels(gene,rotation=0)
 	cbar = ax.collections[0].colorbar
 	cbar.set_ticks([-1, 0, 1])
