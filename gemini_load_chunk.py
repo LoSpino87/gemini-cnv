@@ -575,9 +575,19 @@ class GeminiLoader(object):
                     gt_phred_ll_homref=pack_blob(gt_phred_ll_homref),
                     gt_phred_ll_het=pack_blob(gt_phred_ll_het),
                     gt_phred_ll_homalt=pack_blob(gt_phred_ll_homalt),
-                    gms_illumina=gms.illumina,
-                    gms_solid=gms.solid,
-                    gms_iontorrent=gms.iontorrent)
+
+                    in_cpg_island=bool(in_cpg),
+                    in_segdup=bool(in_segdup),
+                    is_conserved=bool(is_conserved),
+                    cyto_band=cyto_band,
+                    rmsk=rmsk_hits,
+                    recomb_rate=recomb_rate,
+                    
+                    fitcons=fitcons,
+                    encode_tfbs=encode_tfbs,
+                    encode_dnaseI_cell_count=encode_dnaseI.cell_count,
+                    encode_dnaseI_cell_list=encode_dnaseI.cell_list
+                    )
         else:
             variant = dict(chrom=chrom, start=var.start, end=var.end,
                    vcf_id=vcf_id, variant_id=self.v_id, anno_id=top_impact.anno_id,
