@@ -390,7 +390,8 @@ class GeminiLoader(object):
         # collect annotations from gemini's custom annotation files
         # but only if the size of the variant is <= 50kb
         ############################################################
-        if var.end - var.POS < 50000:
+
+        if var.end - var.POS < 100000:
             pfam_domain = annotations.get_pfamA_domains(var)
             cyto_band = annotations.get_rmsk_info(var)
             rs_ids = annotations.get_dbsnp_info(var)
@@ -582,7 +583,7 @@ class GeminiLoader(object):
                     cyto_band=cyto_band,
                     rmsk=rmsk_hits,
                     recomb_rate=recomb_rate,
-                    
+
                     fitcons=fitcons,
                     encode_tfbs=encode_tfbs,
                     encode_dnaseI_cell_count=encode_dnaseI.cell_count,

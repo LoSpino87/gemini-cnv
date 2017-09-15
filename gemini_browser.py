@@ -89,9 +89,6 @@ def index():
     if database is None or not os.path.exists(database):
         redirect('/wizin')
 
-    #user clicked the "loading wizard" button
-    if request.GET.get('load_wiz', '').strip():
-        redirect('wizin')
     return template('index.j2')
 
 @app.route('/query_json', method='GET')
@@ -217,10 +214,11 @@ class Arguments(object):
         if not 'alt_par' in kwargs: kwargs['alt_par'] = None
         if not 'int_len_min' in kwargs: kwargs['int_len_min'] = None
         if not 'int_len_max' in kwargs: kwargs['int_len_max'] = None
-        self.__dict__.update(**kwargs)
         if not 'gene_map' in kwargs: kwargs['gene_map'] = None
         if not 'sample' in kwargs: kwargs['sample'] = None
         if not 'v' in kwargs: kwargs['v'] = None
+        self.__dict__.update(**kwargs)
+
 
 
 @app.route('/de_novo', method='GET')
@@ -326,17 +324,12 @@ def overlap():
         tmp_file = 'overlap_result.txt'
         tmp = open(tmp_file, 'w')
         tmp.write('## ' + res + '\n')
-        tmp.write('#uid\tchrom_A\tstart_A\tend_A\tlen_A\toverlap_A[%]\talt_A'
-                    +'\tchrom_B\tstart_B\tend_B\tlen_B\toverlap_B[%]\ttype_B'
-                    +'\toverlap[bp]\tjaccard_index\tnum_variants\tnum_sample'
-                    +'African\tAsian\tEuropean\tMexican\tMiddle_east'
-                    +'\tNative_american\tOceania\tSouth_american'+'\n')
 
         query_all = "SELECT * from overlap"
         result = GeminiQuery.GeminiQuery(database)
         result._set_gemini_browser(True)
         result.run(query_all)
-
+        tmp.write('#'+ str(result.header) + '\n')
         for row in result:
             tmp.write(str(row)+'\n')
         tmp.close()
@@ -403,15 +396,21 @@ def overlap_gene():
 
     elif request.POST.get('heatmap','').strip():
         if gen_check != None:
-            gene, alt,res = tool_overlap_gene.overlap_custom_gene_browser(args)
+            gene,alt,res = tool_overlap_gene.overlap_custom_gene_browser(args)
         else:
             gene,alt,res = tool_overlap_gene.overlap_gene_browser(args)
 
-        tool_overlap_gene.heatmap(args.db,alt,gene)
+        sel_sample = []
+        if sample:
+            sel_sample = sample.split(',')
+        else:
+            for r in rows_sample:
+                sel_sample.append(r['name'])
+        tool_overlap_gene.heatmap(args.db,alt,gene,sel_sample)
         name, ext = str(database).split('.')
     	path_name = os.getcwd() + '/'
-        picture = path_name + name + '_overlap_gene.png'
-        webbrowser.open_new_tab('file://' + picture)
+        picture = path_name + name + '_gene_heatmap.png'
+        webbrowser.open('file://' + picture)
     else:
         return template('over_gene.j2', name_map= name_map, rows_sample = rows_sample)
 
@@ -421,7 +420,7 @@ def overlap_gene():
 def wizin():
 
     def gemini_load_wiz():
-        gemini_load_cmd = ("gemini_cnv load -v {vcf} {cnv} {CNVmap} {ped_file}"
+        gemini_load_cmd = ("gemini_cnv load -v {vcf} {cnv} {CNVmap} {ped_file} "
                             "{cores} %s") %database
         return gemini_load_cmd
 

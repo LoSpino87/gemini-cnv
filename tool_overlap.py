@@ -33,6 +33,7 @@ def overlap_main(args):
 
 	res = GeminiQuery.GeminiQuery(args.db)
 	res.run(args.query)
+	print res.header
 	for row in res:
 		print row
 
@@ -40,9 +41,7 @@ def extract_data(args):
 	# extract data from variants table and create relative BED object
 	if args.sample:
 		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
-		print gt_col
 		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
-		print gt_filter
 		args.query = """select chrom, start, end, alt, """ + gt_col + """ from variants_cnv"""
 	else :
 		gt_filter = None

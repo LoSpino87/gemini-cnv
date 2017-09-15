@@ -31,10 +31,11 @@ def run(parser, args):
 		else:
 			overlap_gene_main(args)
 
-def extract_data(alt,row,sel_sample):
+def extract_data(alt,row,sel_sample,smp2idx):
 	temp = []
-	for i in range(len(sel_sample)):
-		if row['gts'].take(i) != './.':
+	for s in sel_sample:
+		idx = smp2idx[s]
+		if row['gts'].take(idx) != './.':
 			if row['alt'] == 'DUP':
 				temp.append(1)
 			elif row['alt'] == 'DEL':
@@ -44,7 +45,7 @@ def extract_data(alt,row,sel_sample):
 		else:
 			temp.append(0)
 	alt = np.concatenate((alt,[temp]),axis=0)
-	return alt, row
+	return alt
 
 def overlap_gene_main(args):
 	"""
@@ -77,14 +78,16 @@ def overlap_gene_main(args):
 	gene[:] = []
 	alt = np.array([np.zeros(len(sel_sample))])
 
+	print res.header
+	smp2idx = res.sample_to_idx
 	for row in res:
 		gene.append(str(row['gene']))
-		alt, row = extract_data(alt,row,sel_sample)
+		alt = extract_data(alt,row,sel_sample,smp2idx)
 		print row
 	alt = np.delete(alt,0,0)
 
 	if args.heatmap:
-		heatmap(database=args.db,alt=alt,gene=gene)
+		heatmap(database=args.db,alt=alt,gene=gene,sel_sample=sel_sample)
 
 
 def overlap_gene_browser(args):
@@ -174,14 +177,16 @@ def overlap_custom_gene(args):
 	gene[:] = []
 	alt = np.array([np.zeros(len(sel_sample))])
 
+	print res.header
+	smp2idx = res.sample_to_idx
 	for row in res:
 		gene.append(str(row['gene_name']))
-		alt, row = extract_data(alt,row,sel_sample)
+		alt, row = extract_data(alt,row,sel_sample,smp2idx)
 		print row
 	alt = np.delete(alt,0,0)
 
 	if args.heatmap:
-		heatmap(database=args.db,alt=alt,gene = gene)
+		heatmap(database=args.db,alt=alt,gene = gene,sel_sample=sel_sample)
 
 
 def overlap_custom_gene_browser(args):
@@ -275,11 +280,11 @@ def sample_name(database):
 		names.append(str(n))
 	return names
 
-def heatmap(database,alt,gene):
+def heatmap(database,alt,gene, sel_sample):
 	import numpy as np
 	import seaborn as sb; sb.set()
 
-	sel_sample = sample_name(database)
+
 	alt_a = np.array(alt)
 
 	# get the tick label font size
@@ -295,7 +300,6 @@ def heatmap(database,alt,gene):
 	bottom_margin = 0.04 # in percentage of the figure height
 	figure_height = matrix_height_in / (1 - top_margin - bottom_margin)
 
-
 	# build the figure instance with the desired height
 	fig, ax = plt.subplots(
 	        figsize=(6,figure_height),
@@ -303,6 +307,7 @@ def heatmap(database,alt,gene):
 
 
 	ax = sb.heatmap(alt_a,linewidths=.2, ax=ax)
+
 	ax.set_xticklabels(sel_sample)
 	ax.set_yticklabels(gene,rotation=0)
 	cbar = ax.collections[0].colorbar
@@ -313,4 +318,4 @@ def heatmap(database,alt,gene):
 	name, ext = str(database).split('.')
 	path_name = os.getcwd() + '/'
 	print path_name
-	plt.savefig(path_name + name +'_overlap_gene.png')
+	plt.savefig(path_name + name +'_gene_heatmap.png')
