@@ -284,7 +284,6 @@ def heatmap(database,alt,gene, sel_sample):
 	import numpy as np
 	import seaborn as sb; sb.set()
 
-
 	alt_a = np.array(alt)
 
 	# get the tick label font size
@@ -306,10 +305,11 @@ def heatmap(database,alt,gene, sel_sample):
 	        gridspec_kw=dict(top=1-top_margin, bottom=bottom_margin))
 
 
-	ax = sb.heatmap(alt_a,linewidths=.2, ax=ax)
+	ax = sb.heatmap(alt_a,linewidths=.2, ax=ax, yticklabels = False)
 
+	plt.yticks(np.arange(len(gene)),gene, verticalalignment = 'bottom')
 	ax.set_xticklabels(sel_sample)
-	ax.set_yticklabels(gene,rotation=0)
+	#ax.set_yticklabels(gene,rotation=0)
 	cbar = ax.collections[0].colorbar
 	cbar.set_ticks([-1, 0, 1])
 	cbar.set_ticklabels(['DEL', 'none', 'DUP'])
@@ -317,5 +317,5 @@ def heatmap(database,alt,gene, sel_sample):
 	# save the figure
 	name, ext = str(database).split('.')
 	path_name = os.getcwd() + '/'
-	print path_name
 	plt.savefig(path_name + name +'_gene_heatmap.png')
+	print path_name
