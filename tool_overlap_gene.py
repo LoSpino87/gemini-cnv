@@ -181,7 +181,7 @@ def overlap_custom_gene(args):
 	smp2idx = res.sample_to_idx
 	for row in res:
 		gene.append(str(row['gene_name']))
-		alt, row = extract_data(alt,row,sel_sample,smp2idx)
+		alt = extract_data(alt,row,sel_sample,smp2idx)
 		print row
 	alt = np.delete(alt,0,0)
 
@@ -288,7 +288,7 @@ def heatmap(database,alt,gene, sel_sample):
 
 	# get the tick label font size
 	fontsize_pt = plt.rcParams['ytick.labelsize']
-	dpi = 72.27
+	dpi = 72
 
 	# comput the matrix height in points and inches
 	matrix_height_pt = fontsize_pt * alt_a.shape[0]
@@ -317,5 +317,5 @@ def heatmap(database,alt,gene, sel_sample):
 	# save the figure
 	name, ext = str(database).split('.')
 	path_name = os.getcwd() + '/'
-	plt.savefig(path_name + name +'_gene_heatmap.png')
+	plt.savefig(path_name + name +'_gene_heatmap.png',dpi=dpi,format = 'png')
 	print path_name
