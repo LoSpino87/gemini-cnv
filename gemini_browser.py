@@ -424,7 +424,7 @@ def wizin():
                             "{cores} %s") %database
         return gemini_load_cmd
 
-    message = "Create your database (%s), if not exists, with the Loading Wizard below from VCF.\n" %database
+    message = "%s does not exists in the current path.\n Create it with the Loading Wizard below.\n" %database
     # bottom
     load = request.POST.get('load')
 

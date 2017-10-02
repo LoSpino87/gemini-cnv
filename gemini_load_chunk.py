@@ -512,8 +512,10 @@ class GeminiLoader(object):
             gt_ref_depths = var.gt_ref_depths
             gt_alt_depths = var.gt_alt_depths
             gt_quals = var.gt_quals
-            #gt_copy_numbers = np.array(var.gt_copy_numbers, np.float32)  # 1.0 2.0 2.1 -1
-            gt_copy_numbers = None
+            if self.args.cnv==True:
+                gt_copy_numbers = var.format('CN')
+            else:
+                gt_copy_numbers = None
             gt_phred_ll_homref = var.gt_phred_ll_homref
             gt_phred_ll_het = var.gt_phred_ll_het
             gt_phred_ll_homalt = var.gt_phred_ll_homalt
@@ -564,6 +566,13 @@ class GeminiLoader(object):
             alt_str = ",".join([x or "" for x in var.ALT])
             if "<" in alt_str or ">" in alt_str:
                 alt_str = alt_str[1:-1]
+
+            for n,item in enumerate(gt_bases):
+                if "<" in item:
+                    item = item.replace('<','')
+                    item = item.replace('>','')
+                    gt_bases[n]= item
+
             # cnv variants
             variant = dict(variant_id=self.v_id, chrom=chrom, start=var.start,
                     end=var.end, sv_length=sv.get_length(),

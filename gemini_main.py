@@ -1249,9 +1249,9 @@ def main():
     parser_overlap.add_argument('-r',
             action = 'store_true',
             help = 'Require that the fraction of overlap be reciprocal for A and B.')
-    parser_overlap.add_argument('-v',
-            action = 'store_true',
-            help = 'Only report those entries in A that have no overlap in B. Restricted by -f and -r.')
+    #parser_overlap.add_argument('-v',
+    #        action = 'store_true',
+    #        help = 'Only report those entries in A that have no overlap in B. Restricted by -f and -r.')
     parser_overlap.add_argument('-s',
                 dest = 'sample',
                 help = 'Select a specific sample to annotate')

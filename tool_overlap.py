@@ -159,15 +159,9 @@ def jaccard_index(interval,seq1,seq2):
     return index
 
 def overlap_fraction(args,var_bed,cnv_bed):
-	if args.v:
-		var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, wo = True, v = True)
-	else:
-		var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, wo = True)
+	var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, wo = True)
 	return var_and_cnv
 
 def overlap_reciprocal(args,var_bed,cnv_bed):
-	if args.v:
-		var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, r = True, wo = True, v= True)
-	else:
-		var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, r = True, wo = True)
+	var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, r = True, wo = True)
 	return var_and_cnv
