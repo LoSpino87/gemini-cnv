@@ -355,7 +355,7 @@ def overlap_gene():
         name, ext = os.path.splitext(gene_map.filename)
 
         # control extension
-        if ext not in ('.txt'):
+        if ext not in ('.txt','.bed'):
             message = 'ERR: File extension of gene map file is not allowed.'
             return template('over_gene.j2', message=message)
 

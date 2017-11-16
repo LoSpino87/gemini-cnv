@@ -497,11 +497,12 @@ def create_sample_table(cursor, metadata, args):
     metadata.create_all(tables=[t])
 
 def create_gene_custom_table(cursor,metadata,args):
-    #cursor.execute('''DROP TABLE if exists gene_custom_map ''')
+    cursor.execute('''DROP TABLE if exists gene_custom_map ''')
+    print "droppata"
     cols = [sql.Column("uid", sql.Integer, primary_key=True),
             sql.Column("chrom", sql.TEXT),
-            sql.Column("start", sql.Integer),
-            sql.Column("end", sql.Integer),
+            sql.Column("transcript_start", sql.Integer),
+            sql.Column("transcript_end", sql.Integer),
             sql.Column("gene_name", sql.TEXT)]
     t = sql.Table("gene_custom_map", metadata, *cols,extend_existing=True)
     t.drop(checkfirst=True)

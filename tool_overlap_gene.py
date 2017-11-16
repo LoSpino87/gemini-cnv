@@ -56,7 +56,7 @@ def overlap_gene_main(args):
 		sel_sample = args.sample.split(',')
 		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
 		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.ensembl_gene_id, g.synonym
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.ensembl_gene_id, g.synonym, g.transcript_min_start, g.transcript_max_end
 					from variants_cnv v, gene_view g
 					where g.chrom == v.chrom
 					and g.transcript_min_start >= v.start
@@ -65,7 +65,7 @@ def overlap_gene_main(args):
 	else :
 		gt_filter = None
 		sel_sample = sample_name(database = args.db)
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end,  (gts).(*),g.gene, g.ensembl_gene_id, g.synonym
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end,  (gts).(*),g.gene, g.ensembl_gene_id, g.synonym,g.transcript_min_start, g.transcript_max_end
 					from variants_cnv v, gene_view g
 					where g.chrom == v.chrom
 					and g.transcript_min_start >= v.start
@@ -100,7 +100,7 @@ def overlap_gene_browser(args):
 		sel_sample = args.sample.split(',')
 		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
 		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.ensembl_gene_id, g.synonym
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.ensembl_gene_id, g.synonym, g.transcript_min_start, g.transcript_max_end
 					from variants_cnv v, gene_view g
 					where g.chrom == v.chrom
 					and g.transcript_min_start >= v.start
@@ -109,7 +109,7 @@ def overlap_gene_browser(args):
 	else :
 		gt_filter = None
 		sel_sample = sample_name(database = args.db)
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end,  (gts).(*), g.gene, g.ensembl_gene_id, g.synonym
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end,  (gts).(*), g.gene, g.ensembl_gene_id, g.synonym, g.transcript_min_start, g.transcript_max_end
 					from variants_cnv v, gene_view g
 					where g.chrom == v.chrom
 					and g.transcript_min_start >= v.start
@@ -155,20 +155,20 @@ def overlap_custom_gene(args):
 		sel_sample = args.sample.split(',')
 		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
 		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene_name
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene_name, g.transcript_start, g.transcript_end
 					from variants_cnv v, gene_custom_map g
 					where g.chrom == v.chrom
-					and g.start >= v.start
-					and g.end <= v.end
+					and g.transcript_start >= v.start
+					and g.transcript_end <= v.end
 					order by g.gene_name"""
 	else :
 		gt_filter = None
 		sel_sample = sample_name(database = args.db)
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, (gts).(*), g.gene_name
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, (gts).(*), g.gene_name, g.transcript_start, g.transcript_end
 					from variants_cnv v, gene_custom_map g
 					where g.chrom == v.chrom
-					and g.start >= v.start
-					and g.end <= v.end
+					and g.transcript_start >= v.start
+					and g.transcript_end <= v.end
 					order by g.gene_name"""
 
 	res = GeminiQuery.GeminiQuery(args.db)
@@ -200,20 +200,20 @@ def overlap_custom_gene_browser(args):
 		sel_sample = args.sample.split(',')
 		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
 		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene_name
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene_name, g.transcript_start, g.transcript_end
 					from variants_cnv v, gene_custom_map g
 					where g.chrom == v.chrom
-					and g.start >= v.start
-					and g.end <= v.end
+					and g.transcript_start >= v.start
+					and g.transcript_end <= v.end
 					order by g.gene_name"""
 	else :
 		gt_filter = None
 		sel_sample = sample_name(database = args.db)
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, (gts).(*),g.gene_name
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, (gts).(*),g.gene_name, g.transcript_start, g.transcript_end
 					from variants_cnv v, gene_custom_map g
 					where g.chrom == v.chrom
-					and g.start >= v.start
-					and g.end <= v.end
+					and g.transcript_start >= v.start
+					and g.transcript_end <= v.end
 					order by g.gene_name"""
 
 	res = GeminiQuery.GeminiQuery(args.db)
@@ -249,7 +249,7 @@ def get_gene_map(args):
 	"""
 	c, metadata = database.get_session_metadata(args.db)
 	# drop table if already exists
-	c.execute("DROP TABLE if exists gene_custom_map")
+	#c.execute("DROP TABLE if exists gene_custom_map")
 	# create table
 	database.create_gene_custom_table(c,metadata,args)
 	#unique identifier for each entry
@@ -262,7 +262,7 @@ def get_gene_map(args):
 			col = line.strip().split("\t")
 			table = gene_table.gene_custom_map(col)
 			i += 1
-			gene_map_c = [str(i),table.chrom,table.start,table.end,table.gene_name]
+			gene_map_c = [str(i),table.chrom,table.transcript_start,table.transcript_end,table.gene_name]
 			contents.append(gene_map_c)
 			if i % 1000 == 0:
 				database.insert_gene_custom_map(c,metadata, contents)

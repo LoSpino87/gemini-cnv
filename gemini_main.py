@@ -1281,7 +1281,7 @@ def main():
                 help = 'The name of the database over run overlap tool')
     parser_overlap_gene.add_argument('-l',
                 dest = 'gene_map',
-                help = 'Load a custom gene map [chrom, start, end, gene_name]')
+                help = 'Load a BED custom gene map (or .txt like BED file)')
     parser_overlap_gene.add_argument('-s',
                 dest = 'sample',
                 help = 'Select a specific sample to annotate')
