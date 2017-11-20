@@ -249,7 +249,7 @@ def get_gene_map(args):
 	"""
 	c, metadata = database.get_session_metadata(args.db)
 	# drop table if already exists
-	#c.execute("DROP TABLE if exists gene_custom_map")
+	c.execute("DROP TABLE if exists gene_custom_map")
 	# create table
 	database.create_gene_custom_table(c,metadata,args)
 	#unique identifier for each entry

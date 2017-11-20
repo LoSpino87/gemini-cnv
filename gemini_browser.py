@@ -298,11 +298,13 @@ def overlap():
 
     if recip != None:
         args.r = True
+    if invert != None:
+        args.v = True
 
 
     # user clicked the "submit" button
     if request.GET.get('submit', '').strip():
-        tool_overlap.overlap(args)
+        tool_overlap.overlap_res(args)
         query_all = "SELECT * FROM overlap"
         over = GeminiQuery.GeminiQuery(args.db)
         over._set_gemini_browser(True)
@@ -311,11 +313,12 @@ def overlap():
         result = 'Results with: '
         if f_str != '': result += 'minimum overlap fraction = ' + f_str
         if recip != None: result += ' , reciprocal = ' + recip
+        if invert != None: result += ' , no overlap result = ' + invert
         if len_min != '': result += ' , minimum overlap length = ' + len_min
         if len_max != '': result += ' , maximum overlap length = ' + len_max
         if alt != '': result += ', alteration = ' + alt
         else: result += ' -'
-        return template('overlap.j2', dbfile=database, rows=over, maps_name = name, results = result, reciprocal = recip, rows_sample = rows_sample)
+        return template('overlap.j2', dbfile=database, rows=over, maps_name = name, results = result, reciprocal = recip, rows_sample = rows_sample, invert = invert)
 
     # user clicked the "save as a text file" button
     elif request.GET.get('save', '').strip():

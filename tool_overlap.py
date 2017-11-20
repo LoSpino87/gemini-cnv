@@ -28,7 +28,7 @@ def name_dgv(database):
 		return n
 
 def overlap_main(args):
-	overlap(args)
+	overlap_res(args)
 	args.query = "select * from overlap"
 
 	res = GeminiQuery.GeminiQuery(args.db)
@@ -73,12 +73,19 @@ def extract_data(args):
 	return var_bed, cnv_bed
 
 
-def overlap(args):
+def overlap_res(args):
 	# extract data
 	var_bed, cnv_bed = extract_data(args)
 
 	#overlap
 	var_and_cnv = []
+
+	if args.v:
+		no_overlap(args,var_bed,cnv_bed)
+	else:
+		overlap(args,var_bed,cnv_bed)
+
+def overlap(args,var_bed,cnv_bed):
 	if args.f_par:
 		if args.r:
 			var_and_cnv = overlap_reciprocal(args,var_bed,cnv_bed)
@@ -120,13 +127,15 @@ def overlap(args):
 	e = sql.create_engine(database.get_path(args.db), isolation_level=None)
 	e.connect().connection.connection.text_factory = str
 	metadata = sql.MetaData(bind=e)
-	metadata.reflect(bind=e)
-	metadata.create_all()
 	session = create_session(bind=e, autocommit=False, autoflush=False)
+	over_table = sql.Table('overlap', metadata)
+	over_table.drop(e)
 
-	database.empty_overlap_table(session=session,metadata=metadata)
-	database.insert_overlap(session=session, metadata=metadata, overlap = overlap_result)
-	database.close_and_commit(session=session)
+	c, metadata = database.get_session_metadata(args.db)
+
+	database.create_overlap_result(c,metadata,args)
+	database.insert_overlap(c, metadata,overlap_result)
+	database.close_and_commit(c)
 
 def overlap_filt_alt(args,result):
 	overlap_filt_a = []
@@ -165,3 +174,51 @@ def overlap_fraction(args,var_bed,cnv_bed):
 def overlap_reciprocal(args,var_bed,cnv_bed):
 	var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, r = True, wo = True)
 	return var_and_cnv
+
+def no_overlap(args,var_bed,cnv_bed):
+	var_no_cnv = var_bed.intersect(cnv_bed, f = args.f_par, r= True, v = True)
+
+	overlap_result = []
+	id = 0
+	for r in var_no_cnv:
+		id += 1
+		len = int(r[2])-int(r[1])+1
+		overlap_result.append([id,r[0],r[1],r[2],len,r[3]])
+
+	# length filter
+	if args.int_len_min or args.int_len_max:
+		overlap_result = no_overlap_filt_len(args=args,result=overlap_result)
+	# alteration filter
+	if args.alt_par:
+		overlap_result = overlap_filt_alt(args=args,result=overlap_result)
+
+	e = sql.create_engine(database.get_path(args.db), isolation_level=None)
+	e.connect().connection.connection.text_factory = str
+	metadata = sql.MetaData(bind=e)
+	session = create_session(bind=e, autocommit=False, autoflush=False)
+	over_table = sql.Table('overlap', metadata)
+	over_table.drop(e)
+
+	c, metadata = database.get_session_metadata(args.db)
+	c.execute('''DROP TABLE if exists overlap''')
+	database.create_no_overlap_result(c,metadata,args)
+	database.insert_no_overlap(c, metadata, overlap_result)
+	database.close_and_commit(c)
+
+def no_overlap_filt_len(args,result):
+	overlap_filt_l = []
+	for i in result:
+		if args.int_len_min:
+			if i[4] > int(args.int_len_min):
+				if args.int_len_max:
+					if i[4] < int(args.int_len_max):
+						overlap_filt_l.append(i)
+				else:
+					overlap_filt_l.append(i)
+		else:
+			if args.int_len_max:
+				if i[4] < int(args.int_len_max):
+					overlap_filt_l.append(i)
+			else:
+				overlap_filt_l.append(i)
+	return overlap_filt_l

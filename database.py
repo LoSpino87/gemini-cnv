@@ -404,33 +404,6 @@ def create_tables(path, effect_fields=None):
     Native_american integer,
     Oceania integer,
     South_american integer,""",
-
-    overlap = """
-    uid integer,
-    chrom_A text,
-    start_A integer,
-    end_A integer,
-    len_A integer,
-    overlap_A_perc text,
-    alt_A text,
-    chrom_B text,
-    start_B integer,
-    end_B integer,
-    len_B integer,
-    overlap_B_perc text,
-    type_B text,
-    overlap_bp integer,
-    jaccard_index float,
-    num_variants integer,
-    num_samples integer,
-    African integer,
-    Asian integer,
-    European integer,
-    Mexican integer,
-    Middle_east integer,
-    Native_american integer,
-    Oceania integer,
-    South_american integer,""",
     )
 
     # in the future this will be replaced by reading from the conf file.
@@ -497,14 +470,55 @@ def create_sample_table(cursor, metadata, args):
     metadata.create_all(tables=[t])
 
 def create_gene_custom_table(cursor,metadata,args):
-    cursor.execute('''DROP TABLE if exists gene_custom_map ''')
-    print "droppata"
     cols = [sql.Column("uid", sql.Integer, primary_key=True),
             sql.Column("chrom", sql.TEXT),
             sql.Column("transcript_start", sql.Integer),
             sql.Column("transcript_end", sql.Integer),
             sql.Column("gene_name", sql.TEXT)]
     t = sql.Table("gene_custom_map", metadata, *cols,extend_existing=True)
+    t.drop(checkfirst=True)
+    metadata.create_all(tables=[t])
+
+def create_overlap_result(cursor,metadata,args):
+    cols = [sql.Column("uid",sql.Integer, primary_key=True),
+            sql.Column("chrom_A",sql.TEXT),
+            sql.Column("start_A",sql.Integer),
+            sql.Column("end_A",sql.Integer),
+            sql.Column("len_A",sql.Integer),
+            sql.Column("overlap_A_perc", sql.TEXT),
+            sql.Column("alt_A",sql.TEXT),
+            sql.Column("chrom_B",sql.TEXT),
+            sql.Column("start_B",sql.Integer),
+            sql.Column("end_B", sql.Integer),
+            sql.Column("len_B", sql.Integer),
+            sql.Column("overlap_B_perc", sql.TEXT),
+            sql.Column("type_B", sql.TEXT),
+            sql.Column("overlap_bp", sql.Integer),
+            sql.Column("jaccard_index", sql.Float),
+            sql.Column("num_variants", sql.Integer),
+            sql.Column("num_samples", sql.Integer),
+            sql.Column("African", sql.Integer),
+            sql.Column("Asian", sql.Integer),
+            sql.Column("European", sql.Integer),
+            sql.Column("Mexican", sql.Integer),
+            sql.Column("Middle_east", sql.Integer),
+            sql.Column("Native_american", sql.Integer),
+            sql.Column("Oceania", sql.Integer),
+            sql.Column("South_american", sql.Integer)]
+    t = sql.Table("overlap", metadata, *cols,extend_existing=True)
+    t.drop(checkfirst=True)
+    metadata.create_all(tables=[t])
+
+def create_no_overlap_result(cursor,metadata,args):
+
+    cols = [sql.Column("uid",sql.Integer, primary_key=True),
+            sql.Column("chrom", sql.TEXT),
+            sql.Column("start", sql.Integer),
+            sql.Column("end", sql.Integer),
+            sql.Column("len",sql.Integer),
+            sql.Column("alt", sql.TEXT)
+            ]
+    t = sql.Table("overlap", metadata, *cols,extend_existing=True)
     t.drop(checkfirst=True)
     metadata.create_all(tables=[t])
 
@@ -650,6 +664,13 @@ def insert_dgv_map(session, metadata, dgvmap):
     session.commit()
 
 def insert_overlap(session, metadata, overlap):
+    """Populate overlap results"""
+    t = metadata.tables['overlap']
+    cols = _get_cols(t)
+    session.execute(t.insert(), list(gen_map(cols, overlap)))
+    session.commit()
+
+def insert_no_overlap(session, metadata, overlap):
     """Populate overlap results"""
     t = metadata.tables['overlap']
     cols = _get_cols(t)
