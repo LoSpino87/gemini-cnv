@@ -336,7 +336,7 @@ def overlap():
         for row in result:
             tmp.write(str(row)+'\n')
         tmp.close()
-        return template('overlap.j2', dbfile=database, rows=result, maps_name = name)
+        return template('overlap.j2', dbfile=database, maps_name = name, rows_sample = rows_sample, rows=result)
     else:
         return template('overlap.j2', dbfile=database, maps_name = name, rows_sample = rows_sample )
 
