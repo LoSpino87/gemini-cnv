@@ -78,12 +78,13 @@ def overlap_gene_main(args):
 	gene[:] = []
 	alt = np.array([np.zeros(len(sel_sample))])
 
-	print res.header
+	print res.header, 'Overlap [%]'
 	smp2idx = res.sample_to_idx
 	for row in res:
 		gene.append(str(row['gene']))
+		over_perc = int(row['sv_length'])/(int(row['transcript_max_end'])-int(row['transcript_min_start']))
 		alt = extract_data(alt,row,sel_sample,smp2idx)
-		print row
+		print row, over_perc
 	alt = np.delete(alt,0,0)
 
 	if args.heatmap:

@@ -38,7 +38,8 @@
 			<label class="control-label" for="query">
 				<strong>Query</strong>
 				<br>
-				<em>e.g., select chrom, start, end, ref, alt, gts.sample1 from variants limit 10</em>
+				<em>e.g., select chrom, start, end, ref, alt, gts.sample1 from variants limit 10</em> <br>
+				<em>e.g., select chrom, start, end, alt, gts.sample1, gt_copy_numbers.sample1 from variants_cnv limit 10</em>
 			</label>
 			<div class="controls">
                 <textarea rows="4" class="span6" name="query", >{{query}}</textarea>
@@ -48,7 +49,7 @@
 			<label class="control-label" for="gt-filter">
 				<strong>Genotype Filters</strong>
 				<br>
-				<em>(e.g., (gt_types.sample1 == HET and gt_types.sample2 == HOM_REF))</em>
+				<em>(e.g., (gt_types.sample1 == HET and gt_types.sample2 == HOM_REF))</em> <br>
 			</label>
 			<div class="controls">
                 <textarea rows="3" class="span6" name="gt_filter", >{{gt_filter}}</textarea>
@@ -97,7 +98,7 @@
            {% if loop.index0 == 0 %}
             <tr>
                 {%for col in row %}
-                <th>{{col}}</th> 
+                <th>{{col}}</th>
                 {% endfor %}
             </tr>
             {% endif %}

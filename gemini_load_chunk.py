@@ -577,6 +577,7 @@ class GeminiLoader(object):
                 if item < 0:
                     gt_copy_numbers[n] = -1
 
+
             # cnv variants
             variant = dict(variant_id=self.v_id, chrom=chrom, start=var.start,
                     end=var.end, sv_length=sv.get_length(),
