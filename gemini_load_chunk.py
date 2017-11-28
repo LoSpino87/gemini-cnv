@@ -563,9 +563,9 @@ class GeminiLoader(object):
         # 1 row per variant to VARIANTS table
 
         if self.args.cnv==True:
-            alt_str = ",".join([x or "" for x in var.ALT])
-            if "<" in alt_str or ">" in alt_str:
-                alt_str = alt_str[1:-1]
+            #alt_str = ",".join([x or "" for x in var.ALT])
+            #if "<" in alt_str or ">" in alt_str:
+            #    alt_str = alt_str[1:-1]
 
             for n,item in enumerate(gt_bases):
                 if "<" in item:
@@ -574,8 +574,14 @@ class GeminiLoader(object):
                     gt_bases[n]= item
 
             for n,item in enumerate(gt_copy_numbers):
+                #print n, item
                 if item < 0:
                     gt_copy_numbers[n] = -1
+                else:
+                    if item < 2:
+                        alt_str = 'DEL'
+                    elif item > 2:
+                        alt_str = 'DUP'
 
 
             # cnv variants
