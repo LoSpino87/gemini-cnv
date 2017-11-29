@@ -573,8 +573,8 @@ class GeminiLoader(object):
                     item = item.replace('>','')
                     gt_bases[n]= item
 
+            alt_str = ''
             for n,item in enumerate(gt_copy_numbers):
-                #print n, item
                 if item < 0:
                     gt_copy_numbers[n] = -1
                 else:
@@ -587,7 +587,7 @@ class GeminiLoader(object):
             # cnv variants
             variant = dict(variant_id=self.v_id, chrom=chrom, start=var.start,
                     end=var.end, sv_length=sv.get_length(),
-                    ref=var.REF,alt=alt_str,type=var.var_type,
+                    ref=var.REF, alt=alt_str, type=var.var_type,
                     sub_type=sv.get_svtype(), gts=pack_blob(gt_bases),
                     gt_types = pack_blob(gt_types), gt_phases = pack_blob(gt_phases) ,
                     gt_depths=pack_blob(gt_depths), gt_ref_depths=pack_blob(gt_ref_depths),

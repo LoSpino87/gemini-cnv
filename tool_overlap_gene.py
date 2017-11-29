@@ -82,7 +82,7 @@ def overlap_gene_main(args):
 	smp2idx = res.sample_to_idx
 	for row in res:
 		gene.append(str(row['gene']))
-		over_perc = int(row['sv_length'])/(int(row['transcript_max_end'])-int(row['transcript_min_start']))
+		over_perc = int(row['sv_length'])/(int(row['transcript_max_end'])-int(row['transcript_min_start']))*100
 		alt = extract_data(alt,row,sel_sample,smp2idx)
 		print row, over_perc
 	alt = np.delete(alt,0,0)
