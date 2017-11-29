@@ -563,10 +563,6 @@ class GeminiLoader(object):
         # 1 row per variant to VARIANTS table
 
         if self.args.cnv==True:
-            #alt_str = ",".join([x or "" for x in var.ALT])
-            #if "<" in alt_str or ">" in alt_str:
-            #    alt_str = alt_str[1:-1]
-
             for n,item in enumerate(gt_bases):
                 if "<" in item:
                     item = item.replace('<','')

@@ -124,6 +124,13 @@ def overlap(args,var_bed,cnv_bed):
 		id += 1
 		overlap_result.append([id,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11],r[12],r[13],r[14],r[15],r[16],r[17],r[18],r[19],r[20],r[21],r[22],r[23]])
 
+	e = sql.create_engine(database.get_path(args.db), isolation_level=None)
+	e.connect().connection.connection.text_factory = str
+	metadata = sql.MetaData(bind=e)
+	session = create_session(bind=e, autocommit=False, autoflush=False)
+	over_table = sql.Table('overlap', metadata)
+	over_table.drop(e)
+
 	c, metadata = database.get_session_metadata(args.db)
 	c.execute("DROP TABLE if exists overlap")
 	database.create_overlap_result(c,metadata,args)
@@ -169,7 +176,12 @@ def overlap_reciprocal(args,var_bed,cnv_bed):
 	return var_and_cnv
 
 def no_overlap(args,var_bed,cnv_bed):
-	var_no_cnv = var_bed.intersect(cnv_bed, f = args.f_par, r= True, v = True)
+	if args.f_par:
+		var_no_cnv = var_bed.intersect(cnv_bed, f = args.f_par, v = True)
+		if args.r:
+			var_no_cnv = var_bed.intersect(cnv_bed, f = args.f_par, r= True, v = True)
+	else:
+		var_no_cnv = var_bed.intersect(cnv_bed, v = True)
 
 	overlap_result = []
 	id = 0
