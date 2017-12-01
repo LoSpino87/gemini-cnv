@@ -472,8 +472,8 @@ def create_sample_table(cursor, metadata, args):
 def create_gene_custom_table(cursor,metadata,args):
     cols = [sql.Column("uid", sql.Integer, primary_key=True),
             sql.Column("chrom", sql.TEXT),
-            sql.Column("transcript_start", sql.Integer),
-            sql.Column("transcript_end", sql.Integer),
+            sql.Column("transcript_min_start", sql.Integer),
+            sql.Column("transcript_max_end", sql.Integer),
             sql.Column("gene_name", sql.TEXT)]
     t = sql.Table("gene_custom_map", metadata, *cols,extend_existing=True)
     t.drop(checkfirst=True)

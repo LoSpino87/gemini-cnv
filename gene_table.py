@@ -7,12 +7,12 @@ class gene_custom_map:
         gen = [None if g == 'None' else g for g in gene]
 
         self.chrom = gen[0]
-        self.transcript_start = gen[1]
-        self.transcript_end = gen[2]
+        self.transcript_min_start = gen[1]
+        self.transcript_max_end = gen[2]
         self.gene_name = gen[3]
 
     def __str__(self):
-        return ",".join([self.chrom, self.transcript_start,self.transcript_end,self.gene_name])
+        return ",".join([self.chrom, self.transcript_min_start,self.transcript_max_end,self.gene_name])
 
 
 class gene_detailed:

@@ -129,7 +129,6 @@ def overlap(args,var_bed,cnv_bed):
 	metadata = sql.MetaData(bind=e)
 	session = create_session(bind=e, autocommit=False, autoflush=False)
 	over_table = sql.Table('overlap', metadata)
-	over_table.drop(e)
 
 	c, metadata = database.get_session_metadata(args.db)
 	c.execute("DROP TABLE if exists overlap")
@@ -202,7 +201,6 @@ def no_overlap(args,var_bed,cnv_bed):
 	metadata = sql.MetaData(bind=e)
 	session = create_session(bind=e, autocommit=False, autoflush=False)
 	over_table = sql.Table('overlap', metadata)
-	over_table.drop(e)
 
 	c, metadata = database.get_session_metadata(args.db)
 	c.execute('''DROP TABLE if exists overlap''')
