@@ -305,7 +305,10 @@ def overlap():
     # user clicked the "submit" button
     if request.GET.get('submit', '').strip():
         tool_overlap.overlap_res(args)
-        query_all = "SELECT * FROM overlap"
+        if args.v == True:
+            query_all = "SELECT * FROM no_overlap"
+        else:
+            query_all = "SELECT * FROM overlap"
         over = GeminiQuery.GeminiQuery(args.db)
         over._set_gemini_browser(True)
         over.run(query_all)

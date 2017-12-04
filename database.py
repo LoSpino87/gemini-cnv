@@ -519,7 +519,7 @@ def create_no_overlap_result(cursor,metadata,args):
             sql.Column("len",sql.Integer),
             sql.Column("alt", sql.TEXT)
             ]
-    t = sql.Table("overlap", metadata, *cols,extend_existing=True)
+    t = sql.Table("no_overlap", metadata, *cols,extend_existing=True)
     t.drop(checkfirst=True)
     metadata.create_all(tables=[t])
 
@@ -673,7 +673,7 @@ def insert_overlap(session, metadata, overlap):
 
 def insert_no_overlap(session, metadata, overlap):
     """Populate overlap results"""
-    t = metadata.tables['overlap']
+    t = metadata.tables['no_overlap']
     cols = _get_cols(t)
     session.execute(t.insert(), list(gen_map(cols, overlap)))
     session.commit()

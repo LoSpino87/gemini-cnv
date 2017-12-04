@@ -28,7 +28,10 @@ def name_dgv(database):
 
 def overlap_main(args):
 	overlap_res(args)
-	args.query = "select * from overlap"
+	if args.v == True:
+		args.query = "select * from no_overlap"
+	else:
+		args.query = "select * from overlap"
 
 	res = GeminiQuery.GeminiQuery(args.db)
 	res.run(args.query)
@@ -199,10 +202,10 @@ def no_overlap(args,var_bed,cnv_bed):
 	e.connect().connection.connection.text_factory = str
 	metadata = sql.MetaData(bind=e)
 	session = create_session(bind=e, autocommit=False, autoflush=False)
-	over_table = sql.Table('overlap', metadata)
+	over_table = sql.Table('no_overlap', metadata)
 
 	c, metadata = database.get_session_metadata(args.db)
-	c.execute('''DROP TABLE if exists overlap''')
+	c.execute('''DROP TABLE if exists no_overlap''')
 	database.create_no_overlap_result(c,metadata,args)
 	database.insert_no_overlap(c, metadata, overlap_result)
 	database.close_and_commit(c)
