@@ -9,7 +9,6 @@ import pybedtools
 from pybedtools import BedTool
 import sqlalchemy as sql
 from sqlalchemy.orm import mapper, create_session
-import math
 
 # Gemini imports
 import GeminiQuery

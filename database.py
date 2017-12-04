@@ -279,6 +279,7 @@ def create_tables(path, effect_fields=None):
     ref text,
     alt text,
     type varchar(15),
+    genotype varchar(15),
     sub_type text,
     gts blob,
     gt_types blob,

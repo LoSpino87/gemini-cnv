@@ -506,21 +506,23 @@ class GeminiLoader(object):
 
         if not (self.args.no_genotypes or self.args.no_load_genotypes):
             gt_bases = var.gt_bases
-            gt_types = var.gt_types
+            if self.args.cnv == True:
+                gt_copy_numbers = var.format('CN')
+                gt_types = var.format('FCL')
+            else:
+                gt_copy_numbers = None
+                gt_types = var.gt_types
             gt_phases = var.gt_phases
             gt_depths = var.gt_depths
             gt_ref_depths = var.gt_ref_depths
             gt_alt_depths = var.gt_alt_depths
             gt_quals = var.gt_quals
-            if self.args.cnv==True:
-                gt_copy_numbers = var.format('CN')
-            else:
-                gt_copy_numbers = None
             gt_phred_ll_homref = var.gt_phred_ll_homref
             gt_phred_ll_het = var.gt_phred_ll_het
             gt_phred_ll_homalt = var.gt_phred_ll_homalt
             # tally the genotypes
-            self._update_sample_gt_counts(gt_types)
+            if self.args.cnv == False:
+                self._update_sample_gt_counts(gt_types)
         else:
             gt_bases = gt_types = gt_phases = gt_depths = gt_ref_depths = None
             gt_alt_depths = gt_quals = gt_copy_numbers = None
@@ -579,11 +581,19 @@ class GeminiLoader(object):
                     elif item > 2:
                         alt_str = 'DUP'
 
+            genotype_str = ''
+            for n,item in enumerate(gt_types):
+                if str(item) != 'nan':
+                    if abs(item) == 2:
+                        genotype_str = 'HOMOZYGOTE'
+                    if abs(item) == 1:
+                        genotype_str = 'HETEROZYGOTE'
+
 
             # cnv variants
             variant = dict(variant_id=self.v_id, chrom=chrom, start=var.start,
                     end=var.end, sv_length=sv.get_length(),
-                    ref=var.REF, alt=alt_str, type=var.var_type,
+                    ref=var.REF, alt=alt_str, type=var.var_type, genotype = genotype_str,
                     sub_type=sv.get_svtype(), gts=pack_blob(gt_bases),
                     gt_types = pack_blob(gt_types), gt_phases = pack_blob(gt_phases) ,
                     gt_depths=pack_blob(gt_depths), gt_ref_depths=pack_blob(gt_ref_depths),
