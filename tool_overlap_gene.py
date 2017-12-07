@@ -26,7 +26,6 @@ def run(parser, args):
 	if os.path.exists(args.db):
 		samples = sample_name(database = args.db)
 
-
 		if args.gene_map:
 			overlap_custom_gene(args)
 		else:
@@ -95,7 +94,7 @@ def overlap_gene_main(args):
 	gene[:] = []
 	alt = np.array([np.zeros(len(sel_sample))])
 
-	print res.header
+	print res.header, 'overlap [%]'
 	smp2idx = res.sample_to_idx
 	for row in res:
 		gene.append(str(row['gene']))
@@ -158,7 +157,7 @@ def overlap_gene_browser(args):
 	alt = np.array([np.zeros(len(sel_sample))])
 
 	for row in res:
-		over_perc = perc_over(row)
+		row['over_perc'] = perc_over(row)
 		gene.append(str(row['gene']))
 		temp = []
 		for s in sel_sample:
@@ -191,7 +190,7 @@ def overlap_custom_gene(args):
 		sel_sample = args.sample.split(',')
 		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
 		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene_name, g.transcript_min_start, g.transcript_max_end
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.transcript_min_start, g.transcript_max_end
 					from variants_cnv v, gene_custom_map g
 					where (v.chrom ==  g.chrom
 					and g.transcript_min_start >= v.start
@@ -204,11 +203,11 @@ def overlap_custom_gene(args):
 					(v.chrom ==  g.chrom
 					and g.transcript_min_start < v.end
 					and g.transcript_max_end > v.end)
-					order by g.gene_name"""
+					order by g.gene"""
 	else :
 		gt_filter = None
 		sel_sample = sample_name(database = args.db)
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, (gts).(*), g.gene_name, g.transcript_min_start, g.transcript_max_end
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, (gts).(*), g.gene, g.transcript_min_start, g.transcript_max_end
 					from variants_cnv v, gene_custom_map g
 					where (v.chrom ==  g.chrom
 					and g.transcript_min_start >= v.start
@@ -221,7 +220,7 @@ def overlap_custom_gene(args):
 					(v.chrom ==  g.chrom
 					and g.transcript_min_start < v.end
 					and g.transcript_max_end > v.end)
-					order by g.gene_name"""
+					order by g.gene"""
 
 	res = GeminiQuery.GeminiQuery(args.db)
 	res.run(query_custom,gt_filter)
@@ -233,7 +232,7 @@ def overlap_custom_gene(args):
 	smp2idx = res.sample_to_idx
 	for row in res:
 		over_perc = perc_over(row)
-		gene.append(str(row['gene_name']))
+		gene.append(str(row['gene']))
 		alt = extract_data(alt,row,sel_sample,smp2idx)
 		print row, over_perc
 	alt = np.delete(alt,0,0)
@@ -253,7 +252,7 @@ def overlap_custom_gene_browser(args):
 		sel_sample = args.sample.split(',')
 		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
 		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene_name, g.transcript_min_start, g.transcript_max_end
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, """ + gt_col + """, g.gene, g.transcript_min_start, g.transcript_max_end
 					from variants_cnv v, gene_custom_map g
 					where (v.chrom ==  g.chrom
 					and g.transcript_min_start >= v.start
@@ -266,11 +265,11 @@ def overlap_custom_gene_browser(args):
 					(v.chrom ==  g.chrom
 					and g.transcript_min_start < v.end
 					and g.transcript_max_end > v.end)
-					order by g.gene_name"""
+					order by g.gene"""
 	else :
 		gt_filter = None
 		sel_sample = sample_name(database = args.db)
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, (gts).(*),g.gene_name, g.transcript_min_start, g.transcript_max_end
+		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, (gts).(*),g.gene, g.transcript_min_start, g.transcript_max_end
 					from variants_cnv v, gene_custom_map g
 					where (v.chrom ==  g.chrom
 					and g.transcript_min_start >= v.start
@@ -283,7 +282,7 @@ def overlap_custom_gene_browser(args):
 					(v.chrom ==  g.chrom
 					and g.transcript_min_start < v.end
 					and g.transcript_max_end > v.end)
-					order by g.gene_name"""
+					order by g.gene"""
 
 	res = GeminiQuery.GeminiQuery(args.db)
 	res._set_gemini_browser(True)
@@ -293,7 +292,8 @@ def overlap_custom_gene_browser(args):
 	alt = np.array([np.zeros(len(sel_sample))])
 
 	for row in res:
-		gene.append(str(row['gene_name']))
+		row['over_perc'] = perc_over(row)
+		gene.append(str(row['gene']))
 		temp = []
 		for i,s in enumerate(sel_sample):
 			if row['gts.'+str(s)] != './.':
@@ -331,7 +331,7 @@ def get_gene_map(args):
 			col = line.strip().split("\t")
 			table = gene_table.gene_custom_map(col)
 			i += 1
-			gene_map_c = [str(i),table.chrom,table.transcript_min_start,table.transcript_max_end,table.gene_name]
+			gene_map_c = [str(i),table.chrom,table.transcript_min_start,table.transcript_max_end,table.gene]
 			contents.append(gene_map_c)
 			if i % 1000 == 0:
 				database.insert_gene_custom_map(c,metadata, contents)

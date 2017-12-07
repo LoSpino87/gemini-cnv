@@ -8,7 +8,7 @@ import sys
 import pybedtools
 from pybedtools import BedTool
 import sqlalchemy as sql
-from sqlalchemy.orm import mapper, create_session
+from sqlalchemy.orm import create_session
 
 # Gemini imports
 import GeminiQuery
