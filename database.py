@@ -381,30 +381,6 @@ def create_tables(path, effect_fields=None):
     """,
 
     vcf_header="""vcf_header text""",
-
-    dgv_map="""
-    uid integer,
-    chr text,
-    start integer,
-    end integer,
-    state text,
-    id text,
-    type text,
-    num_variants integer,
-    num_samples integer,
-    num_samples_multicounted integer,
-    num_studies integer,
-    variants text,
-    samples text,
-    studies text,
-    African integer,
-    Asian integer,
-    European integer,
-    Mexican integer,
-    Middle_east integer,
-    Native_american integer,
-    Oceania integer,
-    South_american integer,""",
     )
 
     # in the future this will be replaced by reading from the conf file.
@@ -467,6 +443,33 @@ def create_sample_table(cursor, metadata, args):
             cols.append(sql.Column(field, sql.TEXT))
 
     t = sql.Table("samples", metadata, *cols)
+    t.drop(checkfirst=True)
+    metadata.create_all(tables=[t])
+
+def create_dgv_table(cursor, metadata, args):
+    cols = [sql.Column("uid",sql.Integer, primary_key = True),
+        sql.Column("chr",sql.TEXT),
+        sql.Column("start",sql.Integer),
+        sql.Column("end", sql.Integer),
+        sql.Column("state", sql.TEXT),
+        sql.Column("id", sql.Text),
+        sql.Column("type", sql.TEXT),
+        sql.Column("num_variants", sql.Integer),
+        sql.Column("num_samples", sql.Integer),
+        sql.Column("num_samples_multicounted", sql.Integer),
+        sql.Column("num_studies", sql.Integer),
+        sql.Column("variants", sql.TEXT),
+        sql.Column("samples", sql.TEXT),
+        sql.Column("studies", sql.TEXT),
+        sql.Column("African", sql.Integer),
+        sql.Column("Asian", sql.Integer),
+        sql.Column("European", sql.Integer),
+        sql.Column("Mexican", sql.Integer),
+        sql.Column("Middle_east", sql.Integer),
+        sql.Column("Native_american", sql.Integer),
+        sql.Column("Oceania", sql.Integer),
+        sql.Column("South_american", sql.Integer)]
+    t = sql.Table("dgv_map", metadata, *cols, extend_existing = True)
     t.drop(checkfirst=True)
     metadata.create_all(tables=[t])
 

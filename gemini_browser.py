@@ -217,6 +217,7 @@ class Arguments(object):
         if not 'gene_map' in kwargs: kwargs['gene_map'] = None
         if not 'sample' in kwargs: kwargs['sample'] = None
         if not 'v' in kwargs: kwargs['v'] = None
+        if not 'dgv_cnvmap' in kwargs: kwargs['dgv_cnvmap'] = None
         self.__dict__.update(**kwargs)
 
 
@@ -276,7 +277,7 @@ def db_schema():
     return template('db_schema.j2')
 
 
-@app.route('/overlap', method='GET')
+@app.route('/overlap', method=['POST','GET'])
 def overlap():
     import tool_overlap
 
@@ -286,24 +287,39 @@ def overlap():
 
     rows_sample = name_sample(database=database)
 
-    f_str = str(request.GET.get('f','').strip())
-    recip = request.GET.get('reciprocal')
-    len_min = str(request.GET.get('int_len_min','').strip())
-    len_max = str(request.GET.get('int_len_max','').strip())
-    alt = str(request.GET.get('alt_par','').strip())
-    sample = request.GET.get('sample')
-    invert = request.GET.get('invert')
+    f_str = request.POST.get('f')
+    recip = request.POST.get('reciprocal')
+    len_min = request.POST.get('int_len_min')
+    len_max = request.POST.get('int_len_max')
+    alt = request.POST.get('alt_par')
+    sample = request.POST.get('sample')
+    invert = request.POST.get('invert')
+    dgv_cnvmap = request.files.get('CNVmap')
 
-    args = Arguments(db=database, f_par = f_str, int_len_min = len_min, int_len_max = len_max, alt_par=alt,sample = sample, v = invert)
+    args = Arguments(db=database, f_par = f_str, int_len_min = len_min, int_len_max = len_max, alt_par=alt,sample = sample, v = invert, dgv_cnvmap = dgv_cnvmap)
+
+
+    if dgv_cnvmap:
+        name, ext = os.path.splitext(dgv_cnvmap.filename)
+        # control extension
+        if ext !='.txt':
+            message = 'File extension of CVN map is not allowed.'
+            return template('overlap.j2', message=message)
+
+        # save file
+        save_path = os.getcwd()
+        file_path = "{path}/{file}".format(path=save_path, file = dgv_cnvmap.raw_filename)
+        dgv_cnvmap.save(file_path, overwrite = True)
+        args.dgv_cnvmap = dgv_cnvmap.raw_filename
+        name = dgv_cnvmap.raw_filename
 
     if recip != None:
         args.r = True
     if invert != None:
         args.v = True
 
-
     # user clicked the "submit" button
-    if request.GET.get('submit', '').strip():
+    if request.POST.get('submit', '').strip():
         tool_overlap.overlap_res(args)
         if args.v == True:
             query_all = "SELECT * FROM no_overlap"
@@ -324,8 +340,8 @@ def overlap():
         return template('overlap.j2', dbfile=database, rows=over, maps_name = name, results = result, reciprocal = recip, rows_sample = rows_sample, invert = invert)
 
     # user clicked the "save as a text file" button
-    elif request.GET.get('save', '').strip():
-        res = str(request.GET.get('results'))
+    elif request.POST.get('save', '').strip():
+        res = request.POST.get('results')
 
         tmp_file = 'overlap_result.txt'
         tmp = open(tmp_file, 'w')
@@ -426,7 +442,7 @@ def overlap_gene():
 def wizin():
 
     def gemini_load_wiz():
-        gemini_load_cmd = ("gemini_cnv load -v {vcf} {cnv} {CNVmap} {ped_file} "
+        gemini_load_cmd = ("gemini_cnv load -v {vcf} {cnv} {ped_file} "
                             "{cores} %s") %database
         return gemini_load_cmd
 
@@ -462,21 +478,6 @@ def wizin():
     cnv = request.POST.get('cnv')
     if cnv =='on':cnv = '--cnv'
     else: cnv = ''
-
-    CNVmap = request.files.get('CNVmap')
-    if CNVmap:
-        name, ext = os.path.splitext(CNVmap.filename)
-        # control extension
-        if ext !='.txt':
-            message = 'File extension of CVN map is not allowed.'
-            return template('wizin.j2', message=message)
-
-        # save file
-        file_path = "{path}/{file}".format(path=save_path, file=CNVmap.raw_filename)
-        CNVmap.save(file_path)
-        CNVmap = '--dgv_cnvmap ' + save_path + '/' + CNVmap.raw_filename
-    else: CNVmap=''
-
 
     ped_file = request.files.get('PED')
     if ped_file:

@@ -216,9 +216,6 @@ def main():
                          action='store_true',
                          help='Load in test mode (faster)',
                          default=False)
-    parser_load.add_argument('--dgv_cnvmap',
-                            dest = 'dgv_cnvmap',
-                            help = 'Load CNVmap from DGV database')
     def load_fn(parser, args):
         import gemini_load
         gemini_load.load(parser, args)
@@ -323,9 +320,6 @@ def main():
                                   default=tempfile.gettempdir(),
                                   help='Local (non-NFS) temp directory to use for working around SQLite locking issues '
                                        'on NFS drives.')
-    parser_loadchunk.add_argument('--dgv_cnvmap',
-                           dest = 'dgv_cnvmap',
-                           help = 'Load CNVmap from DGV database.')
 
     def loadchunk_fn(parser, args):
         import gemini_load_chunk
@@ -1243,6 +1237,9 @@ def main():
     parser_overlap.add_argument('db',
             metavar = 'db',
             help = 'The name of the database over run overlap.')
+    parser_overlap.add_argument('--dgv_cnvmap',
+                            dest = 'dgv_cnvmap',
+                            help = 'Load CNVmap from DGV database')
     parser_overlap.add_argument('-f',
             dest = 'f_par',
             help = 'Minimum overlap fraction.')

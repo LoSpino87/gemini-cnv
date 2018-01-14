@@ -13,11 +13,45 @@ from sqlalchemy.orm import create_session
 # Gemini imports
 import GeminiQuery
 import database
+import dgv_table
 
+def get_dgv_map(args):
+	"""
+	Define the dgv_map table
+	"""
+	c, metadata = database.get_session_metadata(args.db)
+	# drop table if already exists
+	c.execute("DROP TABLE if exists dgv_map")
+	# create table
+	database.create_dgv_table(c,metadata,args)
+	#unique identifier for each entry
+	i = 0
+	contents = dgv_map_c = []
+
+	with open(args.dgv_cnvmap,'r') as g:
+		next(g)
+		for line in g:
+			col = line.strip().split("\t")
+			table = dgv_table.dgv_map(col)
+			i += 1
+			dgv_map_c = [str(i), table.chr, table.start, table.end, table.state, table.id, table.type, table.num_variants,
+                  table.num_samples,table.num_samples_multicounted, table.num_studies, table.variants, table.samples,
+                  table.studies, table.African, table.Asia, table.European, table.Mexican, table.Middle_East, table.Native_American,
+                  table.Oceania, table.South_American]
+			contents.append(dgv_map_c)
+			if i % 1000 == 0:
+				database.insert_dgv_map(c,metadata, contents)
+				contents = []
+		database.insert_dgv_map(c, metadata, contents)
+		database.close_and_commit(c)
 
 def run(parser, args):
 	if os.path.exists(args.db):
-		overlap_main(args)
+		if args.dgv_cnvmap:
+			get_dgv_map(args)
+			overlap_main(args)
+		else:
+			print 'There is no map laoded. Please select a cnv map.'
 
 def name_dgv(database):
 	name = "SELECT resource FROM resources WHERE name='dgv_cnvmap'"
@@ -39,7 +73,7 @@ def overlap_main(args):
 	for row in res:
 		print row
 
-def extract_data(args):
+def extract_var(args):
 	# extract data from variants table and create relative BED object
 	if args.sample:
 		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
@@ -59,8 +93,9 @@ def extract_data(args):
 		var_string = var_string + "\n" + str(i)
 
 	var_bed = pybedtools.BedTool(var_string, from_string=True)
+	return var_bed
 
-
+def extract_cnv(args):
 	# extract data from dgv_map table and create relative BED object
 	args.query = """select chr, start, end, type, num_variants, num_samples,
 					African, Asian, European, Mexican, Middle_east,
@@ -72,12 +107,16 @@ def extract_data(args):
 	for i in CNV:
 		cnv_string = cnv_string + "\n" + str(i)
 	cnv_bed = pybedtools.BedTool(cnv_string, from_string=True)
-	return var_bed, cnv_bed
+	return cnv_bed
 
 
 def overlap_res(args):
+	# get cnv map
+	get_dgv_map(args)
+
 	# extract data
-	var_bed, cnv_bed = extract_data(args)
+	var_bed = extract_var(args)
+	cnv_bed = extract_cnv(args)
 
 	#overlap
 	var_and_cnv = []

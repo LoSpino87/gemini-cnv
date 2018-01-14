@@ -4,8 +4,8 @@
 
 {% block body %}
 <div class='row page'>
-	<form class="well span6 offset3">
-		<div class="row">
+	<form id = 'hai' action = '/overlap' method="POST" class="well span6 offset3" enctype="multipart/form-data">
+			<div class="row">
 			<div class="span3">
 				<p>
         <h3>Search <em>overlap region</em> in</h3>
@@ -16,7 +16,17 @@
 				<img src="/static/img/gemini.png" width="80px" class="img-rounded">
 			</div>
 		</div>
+
+
+		<div>
 		<hr>
+		<h3>{{message}}</h3>
+			<br>
+			Select a CNV map (.txt): <input type="file" name="CNVmap" />
+			<br>
+		</div>
+
+		<br>
 		<strong>Minimum overlap required as a fraction of A. Default is 1E-9 (i.e. 1bp).</strong>
 		<div class="control-group">
 				<label class="control-label" for="query">
@@ -65,11 +75,8 @@
 
 		You can select one or more sample <i>(comma separated)</i>: <textarea rows="1" type="text" name="sample">{{sample}}</textarea>
 		<br>
+		<hr>
 
-
-<hr>
-
-<form class="well span6 offset3">
 		<div>
 			<strong>Filter the overlap interval by length (min,max or a range)</strong>
 			<table>
@@ -91,7 +98,6 @@
 			<em><strong>{{results}}</strong></em></textarea>
 			<textarea name="results" style="display:none;">{{results}}</textarea>
 		</div>
-
 </form>
 
 <div class="span12 table-wrapper">

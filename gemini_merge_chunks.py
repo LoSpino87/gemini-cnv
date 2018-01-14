@@ -35,16 +35,6 @@ def append_variant_info(main_curr, chunk_db):
     main_curr.execute(cmd)
 
 
-def append_dgv_map(main_curr, chunk_db):
-    cmd = "attach ? as toMerge"
-    main_curr.execute(cmd, (chunk_db, ))
-
-    cmd = "INSERT INTO dgv_map SELECT * FROM toMerge.dgv_map"
-    main_curr.execute(cmd)
-
-    cmd = "detach toMerge"
-    main_curr.execute(cmd)
-
 def append_sample_genotype_counts(main_curr, chunk_db):
     """
     Append the sample_genotype_counts from a chunk_db
@@ -212,7 +202,6 @@ def merge_db_chunks(args):
             append_vcf_header(main_curr, db)
             append_gene_summary(main_curr, db)
             append_gene_detailed(main_curr, db)
-            append_dgv_map(main_curr, db)
         else:
             update_sample_genotype_counts(main_curr, db)
 

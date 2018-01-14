@@ -239,10 +239,6 @@ def load_chunks_multicore(grabix_file, args):
     if args.skip_info_string is True:
         skip_info_string = "--skip-info-string"
 
-    dgv_cnvmap = ""
-    if args.dgv_cnvmap is not None:
-        dgv_cnvmap = "--dgv_cnvmap " + args.dgv_cnvmap
-
     submit_command = "{cmd}"
     vcf, _ = os.path.splitext(os.path.basename(grabix_file))
     chunk_steps = get_chunk_steps(grabix_file, args)
@@ -287,10 +283,6 @@ def load_chunks_ipython(grabix_file, args, view):
             os.makedirs(args.tempdir)
         tempdir = "--tempdir " + args.tempdir
     chunk_dir = args.tempdir + "/" if args.tempdir else ""
-
-    dgv_cnvmap = ""
-    if args.dgv_cnvmap is not None:
-        dgv_cnvmap = "--dgv_cnvmap " + args.dgv_cnvmap
 
     no_genotypes = ""
     if args.no_genotypes is True:
@@ -342,8 +334,7 @@ def load_chunks_ipython(grabix_file, args, view):
                  "skip_cadd": skip_cadd,
                  "test_mode": test_mode,
                  "passonly": passonly,
-                 "skip_info_string": skip_info_string,
-                 "dgv_cnvmap": dgv_cnvmap}
+                 "skip_info_string": skip_info_string}
     chunk_dbs = view.map(load_chunk, chunk_steps, [load_args] * total_chunks)
 
     print "Done loading variants in {0} chunks.".format(total_chunks)
@@ -372,7 +363,7 @@ def cleanup_temp_db_files(chunk_dbs):
 
 def gemini_pipe_load_cmd():
     grabix_cmd = "grabix grab {grabix_file} {start} {stop}"
-    gemini_load_cmd = ("gemini_cnv load_chunk -v - {cnv} {dgv_cnvmap} {anno_type} {ped_file}"
+    gemini_load_cmd = ("gemini_cnv load_chunk -v - {cnv} {anno_type} {ped_file}"
                        " {no_load_genotypes} {no_genotypes}"
                        " {skip_gerp_bp} {skip_gene_tables} {skip_cadd}"
                        " {passonly} {skip_info_string} {test_mode} {tempdir}"
