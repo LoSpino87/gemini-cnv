@@ -32,3 +32,15 @@ class dgv_map:
                 self.num_samples,self.num_samples_multicounted, self.num_studies, self.variants, self.samples,
                 self.studies, self.African, self.Asia, self.European, self.Mexican, self.Middle_East, self.Native_American,
                 self.Oceania, self.South_American])
+
+class cnv_custom_map:
+    def __init__(self, cnv_map):
+        cnv_map = [None if c == 'None' else c for c in cnv_map]
+
+        self.chr = cnv_map[0]
+        self.start = cnv_map[1]
+        self.end = cnv_map[2]
+        self.opt_field = cnv_map[3]
+
+    def __str__(self):
+        return ",".join([self.chr, sefl.start, self.end, self.opt_fieldspi])

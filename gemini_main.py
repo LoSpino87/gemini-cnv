@@ -1240,6 +1240,9 @@ def main():
     parser_overlap.add_argument('--dgv_cnvmap',
                             dest = 'dgv_cnvmap',
                             help = 'Load CNVmap from DGV database')
+    parser_overlap.add_argument('--bed',
+                            dest = 'cnv_map',
+                            help = 'Load CNVmap from BED file')
     parser_overlap.add_argument('-f',
             dest = 'f_par',
             help = 'Minimum overlap fraction.')

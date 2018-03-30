@@ -473,6 +473,16 @@ def create_dgv_table(cursor, metadata, args):
     t.drop(checkfirst=True)
     metadata.create_all(tables=[t])
 
+def create_cnv_map(cursor, metadata, args):
+    cols = [sql.Column("uid",sql.Integer,primary_key=True),
+            sql.Column("chr",sql.TEXT),
+            sql.Column("start",sql.Integer),
+            sql.Column("end", sql.Integer),
+            sql.Column("opt_field", sql.TEXT)]
+    t = sql.Table("cnv_map", metadata, *cols, extend_existing = True)
+    t.drop(checkfirst=True)
+    metadata.create_all(tables=[t])
+
 def create_gene_custom_table(cursor,metadata,args):
     cols = [sql.Column("uid", sql.Integer, primary_key=True),
             sql.Column("chrom", sql.TEXT),
@@ -514,7 +524,7 @@ def create_overlap_result(cursor,metadata,args):
     metadata.create_all(tables=[t])
 
 def create_no_overlap_result(cursor,metadata,args):
-
+    # table for result of no overlap intersect
     cols = [sql.Column("uid",sql.Integer, primary_key=True),
             sql.Column("chrom", sql.TEXT),
             sql.Column("start", sql.Integer),
@@ -523,6 +533,26 @@ def create_no_overlap_result(cursor,metadata,args):
             sql.Column("alt", sql.TEXT)
             ]
     t = sql.Table("no_overlap", metadata, *cols,extend_existing=True)
+    t.drop(checkfirst=True)
+    metadata.create_all(tables=[t])
+
+def create_overlap_custom_result(cursor, metadata, args):
+    cols = [sql.Column("uid",sql.Integer, primary_key=True),
+            sql.Column("chrom_A",sql.TEXT),
+            sql.Column("start_A",sql.Integer),
+            sql.Column("end_A",sql.Integer),
+            sql.Column("len_A",sql.Integer),
+            sql.Column("overlap_A_perc", sql.TEXT),
+            sql.Column("alt_A",sql.TEXT),
+            sql.Column("chrom_B",sql.TEXT),
+            sql.Column("start_B",sql.Integer),
+            sql.Column("end_B", sql.Integer),
+            sql.Column("len_B", sql.Integer),
+            sql.Column("overlap_B_perc", sql.TEXT),
+            sql.Column("opt_field",sql.TEXT),
+            sql.Column("overlap_bp", sql.Integer),
+            sql.Column("jaccard_index", sql.Float)]
+    t = sql.Table('overlap_custom', metadata, *cols,extend_existing=True)
     t.drop(checkfirst=True)
     metadata.create_all(tables=[t])
 
@@ -667,6 +697,13 @@ def insert_dgv_map(session, metadata, dgvmap):
     session.execute(t.insert(),list(gen_map(cols, dgvmap)))
     session.commit()
 
+def insert_cnv_map(session, metadata, cnvmap):
+    """Populate table of cnv map with a bed file"""
+    t = metadata.tables['cnv_map']
+    cols = _get_cols(t)
+    session.execute(t.insert(),list(gen_map(cols,cnvmap)))
+    session.commit()
+
 def insert_overlap(session, metadata, overlap):
     """Populate overlap results"""
     t = metadata.tables['overlap']
@@ -675,10 +712,17 @@ def insert_overlap(session, metadata, overlap):
     session.commit()
 
 def insert_no_overlap(session, metadata, overlap):
-    """Populate overlap results"""
+    """Populate no overlap results"""
     t = metadata.tables['no_overlap']
     cols = _get_cols(t)
     session.execute(t.insert(), list(gen_map(cols, overlap)))
+    session.commit()
+
+def insert_overlap_custom(session,metadata, overlap):
+    """Populate overlap result from custom map"""
+    t = metadata.tables['overlap_custom']
+    cols = _get_cols(t)
+    session.execute(t.insert(), list(gen_map(cols,overlap)))
     session.commit()
 
 def insert_gene_custom_map(session,metadata,gene_custom_map):
@@ -690,6 +734,11 @@ def insert_gene_custom_map(session,metadata,gene_custom_map):
 
 def empty_overlap_table(session,metadata):
     t = metadata.tables['overlap']
+    session.execute(t.delete())
+    session.commit()
+
+def empty_overlap_custom_table(session,metadata):
+    t = metadata.tables['overlap_custom']
     session.execute(t.delete())
     session.commit()
 
