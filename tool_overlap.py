@@ -217,7 +217,6 @@ def overlap_custom(args,var_bed,cnv_bed):
 	#show result
 	var_and_cnv_b = []
 
-	print var_and_cnv
 	for row in var_and_cnv:
 		inter_overlap = int(row[8])+1
 		length_A = int(row[2])-int(row[1])+1
@@ -239,14 +238,14 @@ def overlap_custom(args,var_bed,cnv_bed):
 		var_and_cnv_b = overlap_filt_alt(args=args,result=var_and_cnv_b)
 
 	# insert id for each row of table
-	overlap_result = []
+	overlap_custom_result = []
 	id = 0
 
 	for r in var_and_cnv_b:
 		id += 1
-		overlap_result.append([id,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11],r[12],r[13]])
+		overlap_custom_result.append([id,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11],r[12],r[13]])
 
-
+	print overlap_custom_result
 	e = sql.create_engine(database.get_path(args.db), isolation_level=None)
 	e.connect().connection.connection.text_factory = str
 	metadata = sql.MetaData(bind=e)
@@ -256,9 +255,8 @@ def overlap_custom(args,var_bed,cnv_bed):
 	c, metadata = database.get_session_metadata(args.db)
 	c.execute("DROP TABLE if exists overlap_custom")
 	database.create_overlap_custom_result(c,metadata,args)
-	database.insert_overlap_custom(c, metadata,overlap_result)
+	database.insert_overlap_custom(c, metadata,overlap_custom_result)
 	database.close_and_commit(c)
-
 
 def overlap_fraction(args,var_bed,cnv_bed):
 	var_and_cnv = var_bed.intersect(cnv_bed, f = args.f_par, wo = True)
