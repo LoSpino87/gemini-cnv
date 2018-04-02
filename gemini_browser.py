@@ -217,7 +217,9 @@ class Arguments(object):
         if not 'gene_map' in kwargs: kwargs['gene_map'] = None
         if not 'sample' in kwargs: kwargs['sample'] = None
         if not 'v' in kwargs: kwargs['v'] = None
-        if not 'dgv_cnvmap' in kwargs: kwargs['dgv_cnvmap'] = None
+        if not 'cnvmap' in kwargs: kwargs['cnvmap'] = None
+        if not 'dgv_cnv_map' in kwargs: kwargs['dgv_cnv_map'] = None
+        if not 'bed_cnv_map' in kwargs: kwargs['bed_cnv_map'] = None
         self.__dict__.update(**kwargs)
 
 
@@ -294,24 +296,26 @@ def overlap():
     alt = request.POST.get('alt_par')
     sample = request.POST.get('sample')
     invert = request.POST.get('invert')
-    dgv_cnvmap = request.files.get('CNVmap')
+    cnvmap = request.files.get('CNVmap')
+    dgv_cnv_map = request.POST.get('dgv_cnv_map')
+    bed_cnv_map = request.POST.get('bed_cnv_map')
 
-    args = Arguments(db=database, f_par = f_str, int_len_min = len_min, int_len_max = len_max, alt_par=alt,sample = sample, v = invert, dgv_cnvmap = dgv_cnvmap)
+    args = Arguments(db=database, f_par = f_str, int_len_min = len_min, int_len_max = len_max, alt_par=alt, sample = sample, v = invert, cnvmap = cnvmap, dgv_cnv_map = dgv_cnv_map, bed_cnv_map = bed_cnv_map)
 
 
-    if dgv_cnvmap:
-        name, ext = os.path.splitext(dgv_cnvmap.filename)
+    if cnvmap:
+        name, ext = os.path.splitext(cnvmap.filename)
         # control extension
-        if ext !='.txt':
+        if ext not in ('.txt','.bed'):
             message = 'File extension of CVN map is not allowed.'
             return template('overlap.j2', message=message)
 
         # save file
         save_path = os.getcwd()
-        file_path = "{path}/{file}".format(path=save_path, file = dgv_cnvmap.raw_filename)
-        dgv_cnvmap.save(file_path, overwrite = True)
-        args.dgv_cnvmap = dgv_cnvmap.raw_filename
-        name = dgv_cnvmap.raw_filename
+        file_path = "{path}/{file}".format(path=save_path, file = cnvmap.raw_filename)
+        cnvmap.save(file_path, overwrite = True)
+        args.cnvmap = cnvmap.raw_filename
+        name = cnvmap.raw_filename
 
     if recip != None:
         args.r = True
@@ -320,24 +324,47 @@ def overlap():
 
     # user clicked the "submit" button
     if request.POST.get('submit', '').strip():
-        tool_overlap.overlap_res(args)
-        if args.v == True:
-            query_all = "SELECT * FROM no_overlap"
-        else:
-            query_all = "SELECT * FROM overlap"
-        over = GeminiQuery.GeminiQuery(args.db)
-        over._set_gemini_browser(True)
-        over.run(query_all)
+        if args.dgv_cnv_map != None:
+            tool_overlap.overlap_res(args)
+            if args.v == True:
+                query_all = "SELECT * FROM no_overlap"
+            else:
+                query_all = "SELECT * FROM overlap"
+            over = GeminiQuery.GeminiQuery(args.db)
+            over._set_gemini_browser(True)
+            over.run(query_all)
 
-        result = 'Results with: '
-        if f_str != '': result += 'minimum overlap fraction = ' + f_str
-        if recip != None: result += ' , reciprocal = ' + recip
-        if invert != None: result += ' , no overlap result = ' + invert
-        if len_min != '': result += ' , minimum overlap length = ' + len_min
-        if len_max != '': result += ' , maximum overlap length = ' + len_max
-        if alt != '': result += ', alteration = ' + alt
-        else: result += ' -'
-        return template('overlap.j2', dbfile=database, rows=over, maps_name = name, results = result, reciprocal = recip, rows_sample = rows_sample, invert = invert)
+            result = 'Results with: '
+            if f_str != '': result += 'minimum overlap fraction = ' + f_str
+            if recip != None: result += ' , reciprocal = ' + recip
+            if invert != None: result += ' , no overlap result = ' + invert
+            if len_min != '': result += ' , minimum overlap length = ' + len_min
+            if len_max != '': result += ' , maximum overlap length = ' + len_max
+            if alt != '': result += ', alteration = ' + alt
+            else: result += ' -'
+            return template('overlap.j2', dbfile=database, rows=over, maps_name = name, results = result, reciprocal = recip, rows_sample = rows_sample, invert = invert, dgv_cnv_map= dgv_cnv_map)
+
+        if args.bed_cnv_map != None:
+            tool_overlap.overlap_custom_res(args)
+            if args.v == True:
+                query_all = "SELECT * FROM no_overlap"
+            else:
+                query_all = "SELECT * FROM overlap_custom"
+            over = GeminiQuery.GeminiQuery(args.db)
+            over._set_gemini_browser(True)
+            over.run(query_all)
+
+            result = 'Results with: '
+            if f_str != '': result += 'minimum overlap fraction = ' + f_str
+            if recip != None: result += ' , reciprocal = ' + recip
+            if invert != None: result += ' , no overlap result = ' + invert
+            if len_min != '': result += ' , minimum overlap length = ' + len_min
+            if len_max != '': result += ' , maximum overlap length = ' + len_max
+            if alt != '': result += ', alteration = ' + alt
+            else: result += ' -'
+            return template('overlap.j2', dbfile=database, rows=over, maps_name=name, results = result, reciprocal = recip, rows_sample = rows_sample, invert = invert, bed_cnv_map = bed_cnv_map)
+
+
 
     # user clicked the "save as a text file" button
     elif request.POST.get('save', '').strip():
@@ -347,7 +374,12 @@ def overlap():
         tmp = open(tmp_file, 'w')
         tmp.write('## ' + res + '\n')
 
-        query_all = "SELECT * from overlap"
+        if dgv_cnv_map!= None:
+            query_all = "SELECT * from overlap"
+        if bed_cnv_map!=None:
+            query_all = "SELECT * from overlap_custom"
+        if invert != None:
+            query_all = "SELECT * from no_overlap"
         result = GeminiQuery.GeminiQuery(database)
         result._set_gemini_browser(True)
         result.run(query_all)

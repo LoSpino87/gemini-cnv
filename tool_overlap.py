@@ -29,7 +29,7 @@ def get_dgv_map(args):
 	i = 0
 	contents = dgv_map_c = []
 
-	with open(args.dgv_cnvmap,'r') as g:
+	with open(args.cnvmap,'r') as g:
 		next(g)
 		for line in g:
 			col = line.strip().split("\t")
@@ -59,7 +59,7 @@ def get_cnv_map(args):
 	#unique identifier for each entry
 	i = 0
 	contents = cnv_map_c = []
-	with open(args.cnv_map,'r') as g:
+	with open(args.cnvmap,'r') as g:
 		next(g)
 		for line in g:
 			col = line.strip().split("\t")
@@ -245,7 +245,6 @@ def overlap_custom(args,var_bed,cnv_bed):
 		id += 1
 		overlap_custom_result.append([id,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11],r[12],r[13]])
 
-	print overlap_custom_result
 	e = sql.create_engine(database.get_path(args.db), isolation_level=None)
 	e.connect().connection.connection.text_factory = str
 	metadata = sql.MetaData(bind=e)
