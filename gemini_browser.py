@@ -325,6 +325,7 @@ def overlap():
     # user clicked the "submit" button
     if request.POST.get('submit', '').strip():
         if args.dgv_cnv_map != None:
+            args.dgv_cnvmap= args.cnvmap
             tool_overlap.overlap_res(args)
             if args.v == True:
                 query_all = "SELECT * FROM no_overlap"
@@ -345,6 +346,7 @@ def overlap():
             return template('overlap.j2', dbfile=database, rows=over, maps_name = name, results = result, reciprocal = recip, rows_sample = rows_sample, invert = invert, dgv_cnv_map= dgv_cnv_map)
 
         if args.bed_cnv_map != None:
+            args.bed_cnvmap=args.cnvmap
             tool_overlap.overlap_custom_res(args)
             if args.v == True:
                 query_all = "SELECT * FROM no_overlap"
@@ -363,7 +365,6 @@ def overlap():
             if alt != '': result += ', alteration = ' + alt
             else: result += ' -'
             return template('overlap.j2', dbfile=database, rows=over, maps_name=name, results = result, reciprocal = recip, rows_sample = rows_sample, invert = invert, bed_cnv_map = bed_cnv_map)
-
 
 
     # user clicked the "save as a text file" button

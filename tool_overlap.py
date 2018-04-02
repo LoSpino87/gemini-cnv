@@ -14,6 +14,7 @@ from sqlalchemy.orm import create_session
 import GeminiQuery
 import database
 import dgv_table
+import export_vcf
 
 # get variants from cnv map file
 def get_dgv_map(args):
@@ -29,7 +30,7 @@ def get_dgv_map(args):
 	i = 0
 	contents = dgv_map_c = []
 
-	with open(args.cnvmap,'r') as g:
+	with open(args.dgv_cnvmap,'r') as g:
 		next(g)
 		for line in g:
 			col = line.strip().split("\t")
@@ -59,7 +60,7 @@ def get_cnv_map(args):
 	#unique identifier for each entry
 	i = 0
 	contents = cnv_map_c = []
-	with open(args.cnvmap,'r') as g:
+	with open(args.bed_cnvmap,'r') as g:
 		next(g)
 		for line in g:
 			col = line.strip().split("\t")
@@ -77,7 +78,7 @@ def overlap_main(args):
 	if args.dgv_cnvmap:
 		overlap_res(args)
 		print_rec(args)
-	if args.cnv_map:
+	if args.bed_cnvmap:
 		overlap_custom_res(args)
 		print_custom_rec(args)
 
@@ -138,8 +139,10 @@ def overlap_res(args):
 
 	if args.v:
 		no_overlap(args,var_bed,cnv_bed)
+		#if args.out_file: export_vcf.export_vcf('no_overlap', args.db, args.out_file)
 	else:
 		overlap(args,var_bed,cnv_bed)
+		#if args.out_file: export_vcf.export_vcf('overlap', args.db, args.out_file)
 
 def overlap_custom_res(args):
 	# get cnv custom map
@@ -151,8 +154,10 @@ def overlap_custom_res(args):
 
 	if args.v:
 		no_overlap(args, var_bed, cnv_bed)
+		#if args.out_file: export_vcf.export_vcf('no_overlap', args.db, args.out_file)
 	else:
 		overlap_custom(args,var_bed,cnv_bed)
+		#if args.out_file: export_vcf.export_vcf('overlap', args.db, args.out_file)
 
 def overlap(args,var_bed,cnv_bed):
 	if args.f_par:
@@ -352,7 +357,7 @@ def no_overlap_filt_len(args,result):
 # run tool from main parser
 def run(parser, args):
 	if os.path.exists(args.db):
-		if args.dgv_cnvmap or args.cnv_map:
+		if args.dgv_cnvmap or args.bed_cnvmap:
 			overlap_main(args)
 		else:
 			print 'There is no map laoded. Please select a cnv map from DGV (--dgv_cnvmap) or a BED (--bed).'

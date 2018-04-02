@@ -1241,7 +1241,7 @@ def main():
                             dest = 'dgv_cnvmap',
                             help = 'Load CNVmap from DGV database')
     parser_overlap.add_argument('--bed',
-                            dest = 'cnv_map',
+                            dest = 'bed_cnvmap',
                             help = 'Load CNVmap from BED file')
     parser_overlap.add_argument('-f',
             dest = 'f_par',
@@ -1265,6 +1265,9 @@ def main():
     parser_overlap.add_argument('-len_max',
             dest = 'int_len_max',
             help = 'Maximum length of intersec')
+    parser_overlap.add_argument('-vcf',
+            dest = 'out_file',
+            help = 'export result in vcf')
 
     def overlap_fn(parser,args):
 	    from tool_overlap import run
