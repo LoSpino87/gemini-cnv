@@ -139,10 +139,12 @@ def overlap_res(args):
 
 	if args.v:
 		no_overlap(args,var_bed,cnv_bed)
-		#if args.out_file: export_vcf.export_vcf('no_overlap', args.db, args.out_file)
+		if args.out_file:
+			export_vcf.export_vcf('no_overlap', args.db, args.out_file)
 	else:
 		overlap(args,var_bed,cnv_bed)
-		#if args.out_file: export_vcf.export_vcf('overlap', args.db, args.out_file)
+		if args.out_file:
+			export_vcf.export_vcf('overlap', args.db, args.out_file)
 
 def overlap_custom_res(args):
 	# get cnv custom map
@@ -154,10 +156,12 @@ def overlap_custom_res(args):
 
 	if args.v:
 		no_overlap(args, var_bed, cnv_bed)
-		#if args.out_file: export_vcf.export_vcf('no_overlap', args.db, args.out_file)
+		if args.out_file:
+			export_vcf.export_vcf('no_overlap', args.db, args.out_file)
 	else:
 		overlap_custom(args,var_bed,cnv_bed)
-		#if args.out_file: export_vcf.export_vcf('overlap', args.db, args.out_file)
+		if args.out_file:
+			export_vcf.export_vcf('overlap', args.db, args.out_file)
 
 def overlap(args,var_bed,cnv_bed):
 	if args.f_par:
