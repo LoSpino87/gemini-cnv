@@ -586,7 +586,7 @@ class GeminiLoader(object):
 
             # cnv variants
             variant = dict(variant_id=self.v_id, chrom=chrom, start=var.start,
-                    end=var.end, sv_length=sv.get_length(),
+                    end=var.end, 
                     ref=var.REF, alt=alt_str, type=var.var_type, genotype = genotype_str,
                     sub_type=sv.get_svtype(), gts=pack_blob(gt_bases),
                     gt_types = pack_blob(gt_types), gt_phases = pack_blob(gt_phases) ,
@@ -596,6 +596,18 @@ class GeminiLoader(object):
                     gt_phred_ll_homref=pack_blob(gt_phred_ll_homref),
                     gt_phred_ll_het=pack_blob(gt_phred_ll_het),
                     gt_phred_ll_homalt=pack_blob(gt_phred_ll_homalt),
+
+                    sv_cipos_start_left=ci_left[0],
+                    sv_cipos_end_left=ci_left[1],
+                    sv_cipos_start_right=ci_right[0],
+                    sv_cipos_end_right=ci_right[1],
+                    sv_length=sv.get_length(),
+                    sv_is_precise=sv.is_precise(),
+                    sv_tool=sv.get_sv_tool(),
+                    sv_evidence_type=sv.get_evidence_type(),
+                    sv_event_id=sv.get_event_id(),
+                    sv_mate_id=sv.get_mate_id(),
+                    sv_strand=sv.get_strand(),
 
                     in_cpg_island=bool(in_cpg),
                     in_segdup=bool(in_segdup),
