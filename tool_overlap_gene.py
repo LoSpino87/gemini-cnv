@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 import sqlalchemy as sql
 import numpy as np
 import math
+import sqlalchemy as sql
+from sqlalchemy.orm import create_session
 
 # Gemini imports
 import GeminiQuery
@@ -31,6 +33,8 @@ def run(parser, args):
 		else:
 			overlap_gene_main(args)
 
+		print_rec(args)
+
 def extract_data(alt,row,sel_sample,smp2idx):
 	temp = []
 	for s in sel_sample:
@@ -46,6 +50,14 @@ def extract_data(alt,row,sel_sample,smp2idx):
 			temp.append(0)
 	alt = np.concatenate((alt,[temp]),axis=0)
 	return alt
+
+def genename(row):
+	gene = str(row['gene'])
+	if gene == 'None':
+		gene = str(row['synonym'])
+		if gene == 'None':
+			gene = str(row['ensembl_gene_id'])
+	return gene
 
 def overlap_gene_main(args):
 	"""
@@ -93,19 +105,43 @@ def overlap_gene_main(args):
 
 	gene[:] = []
 	alt = np.array([np.zeros(len(sel_sample))])
-
-	print res.header, 'overlap [%]'
 	smp2idx = res.sample_to_idx
+
+	result = []
 	for row in res:
 		gene.append(str(row['gene']))
 		over_perc = perc_over(row)
 		alt = extract_data(alt,row,sel_sample,smp2idx)
-		print row, over_perc
+		record = dict(variant_id = row["variant_id"],
+					chrom = str(row["chrom"]),
+					type = str(row["type"]),
+					sub_type = str(row["sub_type"]),
+					alt = str(row["alt"]),
+					sv_length = row["sv_length"],
+					start = row["start"],
+					end = row["end"],
+					gene = genename(row),
+					transcript_min_start = row["transcript_min_start"],
+					transcript_max_end = row["transcript_max_end"],
+					perc = over_perc)
+		result.append(record)
+
 	alt = np.delete(alt,0,0)
+
+	e = sql.create_engine(database.get_path(args.db), isolation_level=None)
+	e.connect().connection.connection.text_factory = str
+	metadata = sql.MetaData(bind=e)
+	session = create_session(bind=e, autocommit=False, autoflush=False)
+	gene_overlap_result = sql.Table('overlap_gene_result', metadata)
+
+	c, metadata = database.get_session_metadata(args.db)
+	c.execute("DROP TABLE if exists overlap_gene_result")
+	database.create_gene_overlap_result(c,metadata, args)
+	database.insert_overlap_gene_result(c, metadata,result)
+	database.close_and_commit(c)
 
 	if args.heatmap:
 		heatmap(database=args.db,alt=alt,gene=gene,sel_sample=sel_sample)
-
 
 def overlap_gene_browser(args):
 	"""
@@ -176,12 +212,39 @@ def overlap_gene_browser(args):
 
 	alt = np.delete(alt,0,0)
 
-	return gene, alt, result
+	return gene, alt
 
 #######################################
 ## use a custom gene map to the join ##
 # tabed: chrom, start, end, gene_name #
 #######################################
+
+def get_gene_map(args):
+	"""
+	Define a custom gene map table
+	"""
+	c, metadata = database.get_session_metadata(args.db)
+	# drop table if already exists
+	c.execute("DROP TABLE if exists gene_custom_map")
+	# create table
+	database.create_gene_custom_table(c,metadata,args)
+	#unique identifier for each entry
+	i = 0
+	contents = gene_map_c = []
+
+	with open(args.gene_map,'r') as g:
+		next(g)
+		for line in g:
+			col = line.strip().split("\t")
+			table = gene_table.gene_custom_map(col)
+			i += 1
+			gene_map_c = [str(i),table.chrom,table.transcript_min_start,table.transcript_max_end,table.gene]
+			contents.append(gene_map_c)
+			if i % 1000 == 0:
+				database.insert_gene_custom_map(c,metadata, contents)
+				contents = []
+		database.insert_gene_custom_map(c, metadata, contents)
+		database.close_and_commit(c)
 
 def overlap_custom_gene(args):
 	get_gene_map(args=args)
@@ -228,18 +291,42 @@ def overlap_custom_gene(args):
 	gene[:] = []
 	alt = np.array([np.zeros(len(sel_sample))])
 
-	print res.header, 'Overlap [%]'
 	smp2idx = res.sample_to_idx
+	result = []
 	for row in res:
 		over_perc = perc_over(row)
 		gene.append(str(row['gene']))
 		alt = extract_data(alt,row,sel_sample,smp2idx)
-		print row, over_perc
+		record = dict(variant_id = row["variant_id"],
+					chrom = str(row["chrom"]),
+					type = str(row["type"]),
+					sub_type = str(row["sub_type"]),
+					alt = str(row["alt"]),
+					sv_length = row["sv_length"],
+					start = row["start"],
+					end = row["end"],
+					gene = row["gene"],
+					transcript_min_start = row["transcript_min_start"],
+					transcript_max_end = row["transcript_max_end"],
+					perc = over_perc)
+		result.append(record)
+
 	alt = np.delete(alt,0,0)
+
+	e = sql.create_engine(database.get_path(args.db), isolation_level=None)
+	e.connect().connection.connection.text_factory = str
+	metadata = sql.MetaData(bind=e)
+	session = create_session(bind=e, autocommit=False, autoflush=False)
+	gene_overlap_result = sql.Table('overlap_gene_result', metadata)
+
+	c, metadata = database.get_session_metadata(args.db)
+	c.execute("DROP TABLE if exists overlap_gene_result")
+	database.create_gene_overlap_result(c,metadata, args)
+	database.insert_overlap_gene_result(c, metadata,result)
+	database.close_and_commit(c)
 
 	if args.heatmap:
 		heatmap(database=args.db,alt=alt,gene = gene,sel_sample=sel_sample)
-
 
 def overlap_custom_gene_browser(args):
 	"""
@@ -312,34 +399,6 @@ def overlap_custom_gene_browser(args):
 
 	return gene, alt, result
 
-def get_gene_map(args):
-	"""
-	Define a custom gene map table
-	"""
-	c, metadata = database.get_session_metadata(args.db)
-	# drop table if already exists
-	c.execute("DROP TABLE if exists gene_custom_map")
-	# create table
-	database.create_gene_custom_table(c,metadata,args)
-	#unique identifier for each entry
-	i = 0
-	contents = gene_map_c = []
-
-	with open(args.gene_map,'r') as g:
-		next(g)
-		for line in g:
-			col = line.strip().split("\t")
-			table = gene_table.gene_custom_map(col)
-			i += 1
-			gene_map_c = [str(i),table.chrom,table.transcript_min_start,table.transcript_max_end,table.gene]
-			contents.append(gene_map_c)
-			if i % 1000 == 0:
-				database.insert_gene_custom_map(c,metadata, contents)
-				contents = []
-		database.insert_gene_custom_map(c, metadata, contents)
-		database.close_and_commit(c)
-
-
 def sample_name(database):
 	names = []
 	query = "SELECT name FROM samples"
@@ -404,3 +463,12 @@ def perc_over(row):
 	else:
 		over_perc = round(float(100),2)
 	return over_perc
+
+def print_rec(args):
+	args.query = "select * from overlap_gene_result"
+
+	res = GeminiQuery.GeminiQuery(args.db)
+	res.run(args.query)
+	print res.header
+	for row in res:
+		print row

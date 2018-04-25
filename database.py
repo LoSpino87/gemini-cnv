@@ -478,7 +478,7 @@ def create_dgv_table(cursor, metadata, args):
         sql.Column("Middle_east", sql.Integer),
         sql.Column("Native_american", sql.Integer),
         sql.Column("Oceania", sql.Integer),
-        sql.Column("South_american", sql.Integer)]
+        sql.Column("South_american", sql.Integer),]
     t = sql.Table("dgv_map", metadata, *cols, extend_existing = True)
     t.drop(checkfirst=True)
     metadata.create_all(tables=[t])
@@ -563,6 +563,24 @@ def create_overlap_custom_result(cursor, metadata, args):
             sql.Column("overlap_bp", sql.Integer),
             sql.Column("jaccard_index", sql.Float)]
     t = sql.Table('overlap_custom', metadata, *cols,extend_existing=True)
+    t.drop(checkfirst=True)
+    metadata.create_all(tables=[t])
+
+def create_gene_overlap_result(cursor, metadata, args):
+    cols = [sql.Column("uid", sql.Integer, primary_key=True),
+            sql.Column("variant_id",sql.Integer),
+            sql.Column("chrom",sql.TEXT),
+            sql.Column("type",sql.TEXT),
+            sql.Column("sub_type",sql.TEXT),
+            sql.Column("alt",sql.TEXT),
+            sql.Column("sv_length", sql.Integer),
+            sql.Column("start", sql.Integer),
+            sql.Column("end", sql.Integer),
+            sql.Column("gene", sql.TEXT),
+            sql.Column("transcript_min_start", sql.Integer),
+            sql.Column("transcript_max_end", sql.Integer),
+            sql.Column("perc", sql.Float)]
+    t = sql.Table('overlap_gene_result',metadata, *cols,extend_existing = True)
     t.drop(checkfirst=True)
     metadata.create_all(tables=[t])
 
@@ -740,6 +758,12 @@ def insert_gene_custom_map(session,metadata,gene_custom_map):
     t = metadata.tables['gene_custom_map']
     cols = _get_cols(t)
     session.execute(t.insert(),list(gen_map(cols, gene_custom_map)))
+    session.commit()
+
+def insert_overlap_gene_result(session, metadata, overlap_gene_result):
+    """ Polupate a table with overlap_gene result"""
+    t = metadata.tables['overlap_gene_result']
+    session.execute(t.insert(),list(overlap_gene_result))
     session.commit()
 
 def empty_overlap_table(session,metadata):

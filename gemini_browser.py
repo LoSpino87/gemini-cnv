@@ -220,6 +220,7 @@ class Arguments(object):
         if not 'cnvmap' in kwargs: kwargs['cnvmap'] = None
         if not 'dgv_cnv_map' in kwargs: kwargs['dgv_cnv_map'] = None
         if not 'bed_cnv_map' in kwargs: kwargs['bed_cnv_map'] = None
+        if not 'heatmap' in kwargs: kwargs['heatmap'] = None
         self.__dict__.update(**kwargs)
 
 
@@ -381,9 +382,11 @@ def overlap():
             query_all = "SELECT * from overlap_custom"
         if invert != None:
             query_all = "SELECT * from no_overlap"
+
         result = GeminiQuery.GeminiQuery(database)
         result._set_gemini_browser(True)
         result.run(query_all)
+
         tmp.write('#'+ str(result.header) + '\n')
         for row in result:
             tmp.write(str(row)+'\n')
@@ -424,11 +427,17 @@ def overlap_gene():
 
     #bottom
     if request.POST.get('submit', '').strip():
+
         if gene_map != None:
             tool_overlap_gene.get_gene_map(args=args)
-            gene,alt,res = tool_overlap_gene.overlap_custom_gene_browser(args)
+            tool_overlap_gene.overlap_custom_gene(args)
         else:
-            gene, alt,res = tool_overlap_gene.overlap_gene_browser(args)
+            tool_overlap_gene.overlap_gene_main(args)
+
+        query_all = "SELECT * FROM overlap_gene_result"
+        res = GeminiQuery.GeminiQuery(args.db)
+        res._set_gemini_browser(True)
+        res.run(query_all)
 
         return template('over_gene.j2', rows=res, name_map = name_map, gen_check = gen_check, sample = args.sample, rows_sample=rows_sample)
 
@@ -438,12 +447,12 @@ def overlap_gene():
         tmp_file = 'overlap_gene_result.txt'
         tmp = open(tmp_file, 'w')
 
-        if gen_check != None:
-            gene,alt,res = tool_overlap_gene.overlap_custom_gene_browser(args)
-            name_map = "custom map"
-        else:
-            gene,alt,res = tool_overlap_gene.overlap_gene_browser(args)
+        query_all = "SELECT * FROM overlap_gene_result"
+        res = GeminiQuery.GeminiQuery(args.db)
+        res._set_gemini_browser(True)
+        res.run(query_all)
 
+        tmp.write(str(res.header))
         for row in res:
             tmp.write(str(row)+'\n')
         tmp.close()
