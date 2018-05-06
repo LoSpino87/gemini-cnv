@@ -81,7 +81,7 @@ def overlap_gene_main(args):
 					(v.chrom ==  g.chrom
 					and g.transcript_min_start < v.end
 					and g.transcript_max_end > v.end)
-					order by g.gene"""
+					order by v.chrom,v.start"""
 	else :
 		gt_filter = None
 		sel_sample = sample_name(database = args.db)
@@ -98,7 +98,7 @@ def overlap_gene_main(args):
 					(v.chrom ==  g.chrom
 					and g.transcript_min_start < v.end
 					and g.transcript_max_end > v.end)
-					order by g.gene"""
+					order by v.chrom,v.start"""
 
 	res = GeminiQuery.GeminiQuery(args.db)
 	res.run(query,gt_filter)
@@ -166,7 +166,7 @@ def overlap_gene_browser(args):
 					(v.chrom ==  g.chrom
 					and g.transcript_min_start < v.end
 					and g.transcript_max_end > v.end)
-					order by g.gene"""
+					order by v.chrom,v.start"""
 	else :
 		gt_filter = None
 		sel_sample = sample_name(database = args.db)
@@ -183,7 +183,7 @@ def overlap_gene_browser(args):
 					(v.chrom ==  g.chrom
 					and g.transcript_min_start < v.end
 					and g.transcript_max_end > v.end)
-					order by g.gene"""
+					order by v.chrom,v.start"""
 
 	res = GeminiQuery.GeminiQuery(args.db)
 	res._set_gemini_browser(True)
@@ -266,7 +266,7 @@ def overlap_custom_gene(args):
 					(v.chrom ==  g.chrom
 					and g.transcript_min_start < v.end
 					and g.transcript_max_end > v.end)
-					order by g.gene"""
+					order by v.chrom,v.start"""
 	else :
 		gt_filter = None
 		sel_sample = sample_name(database = args.db)
@@ -283,7 +283,7 @@ def overlap_custom_gene(args):
 					(v.chrom ==  g.chrom
 					and g.transcript_min_start < v.end
 					and g.transcript_max_end > v.end)
-					order by g.gene"""
+					order by v.chrom,v.start"""
 
 	res = GeminiQuery.GeminiQuery(args.db)
 	res.run(query_custom,gt_filter)
@@ -352,7 +352,7 @@ def overlap_custom_gene_browser(args):
 					(v.chrom ==  g.chrom
 					and g.transcript_min_start < v.end
 					and g.transcript_max_end > v.end)
-					order by g.gene"""
+					order by v.chrom,v.start"""
 	else :
 		gt_filter = None
 		sel_sample = sample_name(database = args.db)
@@ -369,7 +369,7 @@ def overlap_custom_gene_browser(args):
 					(v.chrom ==  g.chrom
 					and g.transcript_min_start < v.end
 					and g.transcript_max_end > v.end)
-					order by g.gene"""
+					order by v.chrom,v.start"""
 
 	res = GeminiQuery.GeminiQuery(args.db)
 	res._set_gemini_browser(True)
