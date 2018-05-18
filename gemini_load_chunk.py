@@ -586,7 +586,7 @@ class GeminiLoader(object):
 
             # cnv variants
             variant = dict(variant_id=self.v_id, chrom=chrom, start=var.start,
-                    end=var.end, 
+                    end=var.end,
                     ref=var.REF, alt=alt_str, type=var.var_type, genotype = genotype_str,
                     sub_type=sv.get_svtype(), gts=pack_blob(gt_bases),
                     gt_types = pack_blob(gt_types), gt_phases = pack_blob(gt_phases) ,
@@ -608,7 +608,6 @@ class GeminiLoader(object):
                     sv_event_id=sv.get_event_id(),
                     sv_mate_id=sv.get_mate_id(),
                     sv_strand=sv.get_strand(),
-
                     in_cpg_island=bool(in_cpg),
                     in_segdup=bool(in_segdup),
                     is_conserved=bool(is_conserved),

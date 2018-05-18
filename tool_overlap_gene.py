@@ -124,7 +124,18 @@ def overlap_gene_main(args):
 					transcript_min_start = row["transcript_min_start"],
 					transcript_max_end = row["transcript_max_end"],
 					perc = over_perc)
-		result.append(record)
+
+		if args.perc_max and args.perc_min:
+			if float(args.perc_max) > over_perc and float(args.perc_min) < over_perc:
+				result.append(record)
+		elif args.perc_max:
+			if float(args.perc_max) > over_perc:
+				result.append(record)
+		elif args.perc_min:
+			if float(args.perc_min) < over_perc:
+				result.append(record)
+		else:
+			result.append(record)
 
 	alt = np.delete(alt,0,0)
 
@@ -309,7 +320,18 @@ def overlap_custom_gene(args):
 					transcript_min_start = row["transcript_min_start"],
 					transcript_max_end = row["transcript_max_end"],
 					perc = over_perc)
-		result.append(record)
+
+		if args.perc_max and args.perc_min:
+			if float(args.perc_max) > over_perc and float(args.perc_min) < over_perc:
+				result.append(record)
+		elif args.perc_max:
+			if float(args.perc_max) > over_perc:
+				result.append(record)
+		elif args.perc_min:
+			if float(args.perc_min) < over_perc:
+				result.append(record)
+		else:
+			result.append(record)
 
 	alt = np.delete(alt,0,0)
 
@@ -463,6 +485,7 @@ def perc_over(row):
 	else:
 		over_perc = round(float(100),2)
 	return over_perc
+
 
 def print_rec(args):
 	args.query = "select * from overlap_gene_result"
