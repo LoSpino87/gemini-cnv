@@ -579,7 +579,8 @@ def create_gene_overlap_result(cursor, metadata, args):
             sql.Column("gene", sql.TEXT),
             sql.Column("transcript_min_start", sql.Integer),
             sql.Column("transcript_max_end", sql.Integer),
-            sql.Column("perc", sql.Float)]
+            sql.Column("perc", sql.Float),
+            sql.Column("gts",sql.LargeBinary())]
     t = sql.Table('overlap_gene_result',metadata, *cols,extend_existing = True)
     t.drop(checkfirst=True)
     metadata.create_all(tables=[t])

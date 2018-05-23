@@ -221,6 +221,8 @@ class Arguments(object):
         if not 'dgv_cnv_map' in kwargs: kwargs['dgv_cnv_map'] = None
         if not 'bed_cnv_map' in kwargs: kwargs['bed_cnv_map'] = None
         if not 'heatmap' in kwargs: kwargs['heatmap'] = None
+        if not 'perc_max' in kwargs: kwargs['perc_max'] = None
+        if not 'perc_min' in kwargs: kwargs['perc_min'] = None
         self.__dict__.update(**kwargs)
 
 
@@ -403,10 +405,12 @@ def overlap_gene():
     gene_map = request.files.get('genemap')
     gen_check = request.POST.get('gen_check')
     sample = request.POST.get('sample')
+    perc_max = request.POST.get('perc_max')
+    perc_min = request.POST.get('perc_min')
 
     rows_sample = name_sample(database=database)
 
-    args = Arguments(db = database,gene_map = gene_map,sample = sample)
+    args = Arguments(db = database,gene_map = gene_map,sample = sample,perc_max=perc_max,perc_min=perc_min)
     name_map = 'Ensembl 75 version'
 
     if gene_map:
@@ -429,7 +433,7 @@ def overlap_gene():
     if request.POST.get('submit', '').strip():
 
         if gene_map != None:
-            tool_overlap_gene.get_gene_map(args=args)
+            tool_overlap_gene.get_gene_map(args)
             tool_overlap_gene.overlap_custom_gene(args)
         else:
             tool_overlap_gene.overlap_gene_main(args)

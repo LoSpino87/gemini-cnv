@@ -101,6 +101,7 @@ def overlap_gene_main(args):
 					order by v.chrom,v.start"""
 
 	res = GeminiQuery.GeminiQuery(args.db)
+	smp2idx = res.sample_to_idx
 	res.run(query,gt_filter)
 
 	gene[:] = []
@@ -112,6 +113,7 @@ def overlap_gene_main(args):
 		gene.append(str(row['gene']))
 		over_perc = perc_over(row)
 		alt = extract_data(alt,row,sel_sample,smp2idx)
+		gts = row['gts']
 		record = dict(variant_id = row["variant_id"],
 					chrom = str(row["chrom"]),
 					type = str(row["type"]),
@@ -123,7 +125,8 @@ def overlap_gene_main(args):
 					gene = genename(row),
 					transcript_min_start = row["transcript_min_start"],
 					transcript_max_end = row["transcript_max_end"],
-					perc = over_perc)
+					perc = over_perc,
+					gts = gts)
 
 		if args.perc_max and args.perc_min:
 			if float(args.perc_max) > over_perc and float(args.perc_min) < over_perc:
