@@ -502,10 +502,9 @@ class GeminiLoader(object):
             gt_bases = var.gt_bases
             if self.args.cnv == True:
                 gt_copy_numbers = var.format('CN')
-                gt_types = var.format('FCL')
             else:
                 gt_copy_numbers = None
-                gt_types = var.gt_types
+            gt_types = var.gt_types
             gt_phases = var.gt_phases
             gt_depths = var.gt_depths
             gt_ref_depths = var.gt_ref_depths
