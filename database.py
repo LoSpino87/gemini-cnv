@@ -580,7 +580,17 @@ def create_gene_overlap_result(cursor, metadata, args):
             sql.Column("transcript_min_start", sql.Integer),
             sql.Column("transcript_max_end", sql.Integer),
             sql.Column("perc", sql.Float),
-            sql.Column("gts",sql.LargeBinary())]
+            sql.Column("gts",sql.LargeBinary()),
+            sql.Column("gt_types",sql.LargeBinary()),
+            sql.Column("gt_phases",sql.LargeBinary()),
+            sql.Column("gt_depths",sql.LargeBinary()),
+            sql.Column("gt_ref_depths",sql.LargeBinary()),
+            sql.Column("gt_alt_depths",sql.LargeBinary()),
+            sql.Column("gt_quals",sql.LargeBinary()),
+            sql.Column("gt_copy_numbers",sql.LargeBinary()),
+            sql.Column("gt_phred_ll_homref",sql.LargeBinary()),
+            sql.Column("gt_phred_ll_het",sql.LargeBinary()),
+            sql.Column("gt_phred_ll_homalt",sql.LargeBinary())]
     t = sql.Table('overlap_gene_result',metadata, *cols,extend_existing = True)
     t.drop(checkfirst=True)
     metadata.create_all(tables=[t])

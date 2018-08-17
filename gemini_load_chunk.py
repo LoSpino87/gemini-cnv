@@ -511,8 +511,12 @@ class GeminiLoader(object):
             gt_alt_depths = var.gt_alt_depths
             gt_quals = var.gt_quals
             gt_phred_ll_homref = var.gt_phred_ll_homref
-            gt_phred_ll_het = var.gt_phred_ll_het
-            gt_phred_ll_homalt = var.gt_phred_ll_homalt
+            if gt_phred_ll_homref == []:
+                gt_phred_ll_homref = gt_phred_ll_het = gt_phred_ll_homalt = None
+            else:
+                gt_phred_ll_homref = var.gt_phred_ll_homref
+                gt_phred_ll_het = var.gt_phred_ll_het
+                gt_phred_ll_homalt = var.gt_phred_ll_homalt
             # tally the genotypes
             if self.args.cnv == False:
                 self._update_sample_gt_counts(gt_types)
