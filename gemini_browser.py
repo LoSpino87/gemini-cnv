@@ -433,7 +433,7 @@ def overlap_gene():
     if request.POST.get('submit', '').strip():
 
         if gene_map != None:
-            tool_overlap_gene.get_gene_map(args)
+            tool_overlap_gene._get_gene_map(args)
             tool_overlap_gene.overlap_custom_gene(args)
         else:
             tool_overlap_gene.overlap_gene_main(args)

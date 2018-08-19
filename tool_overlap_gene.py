@@ -27,7 +27,7 @@ samples = []
 
 def run(parser, args):
 	if os.path.exists(args.db):
-		samples = sample_name(database = args.db)
+		samples = _sample_name(database = args.db)
 
 		if args.gene_map:
 			overlap_custom_gene(args)
@@ -36,7 +36,7 @@ def run(parser, args):
 
 		print_rec(args)
 
-def extract_data(alt,row,sel_sample,smp2idx):
+def _extract_data(alt,row,sel_sample,smp2idx):
 	temp = []
 	for s in sel_sample:
 		idx = smp2idx[s]
@@ -52,7 +52,7 @@ def extract_data(alt,row,sel_sample,smp2idx):
 	alt = np.concatenate((alt,[temp]),axis=0)
 	return alt
 
-def genename(row):
+def _genename(row):
 	gene = str(row['gene'])
 	if gene == 'None':
 		gene = str(row['synonym'])
@@ -60,10 +60,7 @@ def genename(row):
 			gene = str(row['ensembl_gene_id'])
 	return gene
 
-def overlap_gene_main(args):
-	"""
-	A function to view the overlap between gene and CNV
-	"""
+def _query(args):
 
 	if args.sample:
 		sel_sample = args.sample.split(',')
@@ -99,7 +96,7 @@ def overlap_gene_main(args):
 					order by v.chrom,v.start"""
 	else :
 		gt_filter = None
-		sel_sample = sample_name(database = args.db)
+		sel_sample = _sample_name(database = args.db)
 		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end,\
 					(gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
 					(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*), \
@@ -118,6 +115,71 @@ def overlap_gene_main(args):
 					and g.transcript_max_end > v.end) \
 					order by v.chrom,v.start"""
 
+	return query,gt_filter,sel_sample
+
+def _query_custom(args):
+	if args.sample:
+		sel_sample = args.sample.split(',')
+		gts = 'gts.' + ', gts.'.join([str(s) for s in sel_sample])
+		gt_types = 'gt_types.' + ', gt_types.'.join([str(s) for s in sel_sample])
+		gt_phases = 'gt_phases.' + ', gt_phases.'.join([str(s) for s in sel_sample])
+		gt_depths = 'gt_depths.' + ', gt_depths.'.join([str(s) for s in sel_sample])
+		gt_ref_depths = 'gt_ref_depths.' + ', gt_ref_depths.'.join([str(s) for s in sel_sample])
+		gt_alt_depths = 'gt_alt_depths.' + ', gt_alt_depths.'.join([str(s) for s in sel_sample])
+		gt_quals = 'gt_quals.' + ', gt_quals.'.join([str(s) for s in sel_sample])
+		gt_copy_numbers = 'gt_copy_numbers.' + ', gt_copy_numbers.'.join([str(s) for s in sel_sample])
+		gt_phred_ll_homref = 'gt_phred_ll_homref.' + ', gt_phred_ll_homref.'.join([str(s) for s in sel_sample])
+		gt_phred_ll_het = 'gt_phred_ll_het.' + ', gt_phred_ll_het.'.join([str(s) for s in sel_sample])
+		gt_phred_ll_homalt = 'gt_phred_ll_homalt.' + ', gt_phred_ll_homalt.'.join([str(s) for s in sel_sample])
+
+		gt_filter  = " != './.' or".join([s for s in gts.split(',')]) + " != './.' "
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, \
+					""" + gts +', ' + gt_types +', ' + gt_phases +', ' +gt_depths +', ' + gt_ref_depths +', ' +gt_alt_depths +', ' + gt_quals +', ' + gt_copy_numbers+', ' + gt_phred_ll_homref+', ' +gt_phred_ll_het+', ' + gt_phred_ll_homalt+', ' + """\
+					g.gene, g.transcript_min_start, g.transcript_max_end
+					from variants_cnv v, gene_custom_map g
+					where (v.chrom ==  g.chrom
+					and g.transcript_min_start >= v.start
+					and g.transcript_max_end <= v.end)
+					or
+					(v.chrom ==  g.chrom
+					and g.transcript_min_start < v.start
+					and g.transcript_max_end > v.start)
+					or
+					(v.chrom ==  g.chrom
+					and g.transcript_min_start < v.end
+					and g.transcript_max_end > v.end)
+					order by v.chrom,v.start"""
+	else :
+		gt_filter = None
+		sel_sample = _sample_name(database = args.db)
+		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, \
+					(gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
+					(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*), \
+		 			g.gene, g.transcript_min_start, g.transcript_max_end \
+					from variants_cnv v, gene_custom_map g \
+					where (v.chrom ==  g.chrom \
+					and g.transcript_min_start >= v.start \
+					and g.transcript_max_end <= v.end) \
+					or \
+					(v.chrom ==  g.chrom \
+					and g.transcript_min_start < v.start \
+					and g.transcript_max_end > v.start) \
+					or \
+					(v.chrom ==  g.chrom \
+					and g.transcript_min_start < v.end \
+					and g.transcript_max_end > v.end) \
+					order by v.chrom,v.start"""
+
+	return query,gt_filter,sel_sample
+
+
+
+def overlap_gene_main(args):
+	"""
+	A function to view the overlap between gene and CNV
+	"""
+	query,gt_filter,sel_sample = _query(args)
+
 	res = GeminiQuery.GeminiQuery(args.db)
 	res.run(query,gt_filter)
 
@@ -128,7 +190,7 @@ def overlap_gene_main(args):
 	for row in res:
 		gene.append(str(row['gene']))
 		over_perc = perc_over(row)
-		alt = extract_data(alt,row,sel_sample,smp2idx)
+		alt = _extract_data(alt,row,sel_sample,smp2idx)
 		gts = row['gts']
 		record = dict(variant_id = row["variant_id"],
 					chrom = str(row["chrom"]),
@@ -138,7 +200,7 @@ def overlap_gene_main(args):
 					sv_length = row["sv_length"],
 					start = row["start"],
 					end = row["end"],
-					gene = genename(row),
+					gene = _genename(row),
 					transcript_min_start = row["transcript_min_start"],
 					transcript_max_end = row["transcript_max_end"],
 					perc = over_perc,
@@ -187,57 +249,7 @@ def overlap_gene_browser(args):
 	"""
 	result = []
 
-	if args.sample:
-		sel_sample = args.sample.split(',')
-		gts = 'gts.' + ', gts.'.join([str(s) for s in sel_sample])
-		gt_types = 'gt_types.' + ', gt_types.'.join([str(s) for s in sel_sample])
-		gt_phases = 'gt_phases.' + ', gt_phases.'.join([str(s) for s in sel_sample])
-		gt_depths = 'gt_depths.' + ', gt_depths.'.join([str(s) for s in sel_sample])
-		gt_ref_depths = 'gt_ref_depths.' + ', gt_ref_depths.'.join([str(s) for s in sel_sample])
-		gt_alt_depths = 'gt_alt_depths.' + ', gt_alt_depths.'.join([str(s) for s in sel_sample])
-		gt_quals = 'gt_quals.' + ', gt_quals.'.join([str(s) for s in sel_sample])
-		gt_copy_numbers = 'gt_copy_numbers.' + ', gt_copy_numbers.'.join([str(s) for s in sel_sample])
-		gt_phred_ll_homref = 'gt_phred_ll_homref.' + ', gt_phred_ll_homref.'.join([str(s) for s in sel_sample])
-		gt_phred_ll_het = 'gt_phred_ll_het.' + ', gt_phred_ll_het.'.join([str(s) for s in sel_sample])
-		gt_phred_ll_homalt = 'gt_phred_ll_homalt.' + ', gt_phred_ll_homalt.'.join([str(s) for s in sel_sample])
-
-		gt_filter  = " != './.' or".join([s for s in gts.split(',')]) + " != './.' "
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, \
-					""" + gts +', ' + gt_types +', ' + gt_phases +', ' +gt_depths +', ' + gt_ref_depths +', ' +gt_alt_depths +', ' + gt_quals +', ' + gt_copy_numbers+', ' + gt_phred_ll_homref+', ' +gt_phred_ll_het+', ' + gt_phred_ll_homalt+', ' + """\
-					g.gene, g.ensembl_gene_id, g.synonym, g.transcript_min_start, g.transcript_max_end
-					from variants_cnv v, gene_view g
-					where (v.chrom ==  g.chrom
-					and g.transcript_min_start >= v.start
-					and g.transcript_max_end <= v.end)
-					or
-					(v.chrom ==  g.chrom
-					and g.transcript_min_start < v.start
-					and g.transcript_max_end > v.start)
-					or
-					(v.chrom ==  g.chrom
-					and g.transcript_min_start < v.end
-					and g.transcript_max_end > v.end)
-					order by v.chrom,v.start"""
-	else :
-		gt_filter = None
-		sel_sample = sample_name(database = args.db)
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end,\
-					(gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
-					(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*), \
-					g.gene, g.ensembl_gene_id, g.synonym, g.transcript_min_start, g.transcript_max_end \
-					from variants_cnv v, gene_view g \
-					where (v.chrom ==  g.chrom \
-					and g.transcript_min_start >= v.start \
-					and g.transcript_max_end <= v.end) \
-					or \
-					(v.chrom ==  g.chrom \
-					and g.transcript_min_start < v.start \
-					and g.transcript_max_end > v.start)
-					or \
-					(v.chrom ==  g.chrom \
-					and g.transcript_min_start < v.end \
-					and g.transcript_max_end > v.end) \
-					order by v.chrom,v.start"""
+	query,gt_filter,sel_sample = _query(args)
 
 	res = GeminiQuery.GeminiQuery(args.db)
 	res._set_gemini_browser(True)
@@ -273,7 +285,7 @@ def overlap_gene_browser(args):
 # tabed: chrom, start, end, gene_name #
 #######################################
 
-def get_gene_map(args):
+def _get_gene_map(args):
 	"""
 	Define a custom gene map table
 	"""
@@ -301,59 +313,9 @@ def get_gene_map(args):
 		database.close_and_commit(c)
 
 def overlap_custom_gene(args):
-	get_gene_map(args=args)
+	_get_gene_map(args=args)
 
-	if args.sample:
-		sel_sample = args.sample.split(',')
-		gts = 'gts.' + ', gts.'.join([str(s) for s in sel_sample])
-		gt_types = 'gt_types.' + ', gt_types.'.join([str(s) for s in sel_sample])
-		gt_phases = 'gt_phases.' + ', gt_phases.'.join([str(s) for s in sel_sample])
-		gt_depths = 'gt_depths.' + ', gt_depths.'.join([str(s) for s in sel_sample])
-		gt_ref_depths = 'gt_ref_depths.' + ', gt_ref_depths.'.join([str(s) for s in sel_sample])
-		gt_alt_depths = 'gt_alt_depths.' + ', gt_alt_depths.'.join([str(s) for s in sel_sample])
-		gt_quals = 'gt_quals.' + ', gt_quals.'.join([str(s) for s in sel_sample])
-		gt_copy_numbers = 'gt_copy_numbers.' + ', gt_copy_numbers.'.join([str(s) for s in sel_sample])
-		gt_phred_ll_homref = 'gt_phred_ll_homref.' + ', gt_phred_ll_homref.'.join([str(s) for s in sel_sample])
-		gt_phred_ll_het = 'gt_phred_ll_het.' + ', gt_phred_ll_het.'.join([str(s) for s in sel_sample])
-		gt_phred_ll_homalt = 'gt_phred_ll_homalt.' + ', gt_phred_ll_homalt.'.join([str(s) for s in sel_sample])
-
-		gt_filter  = " != './.' or".join([s for s in gts.split(',')]) + " != './.' "
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, \
-					""" + gts +', ' + gt_types +', ' + gt_phases +', ' +gt_depths +', ' + gt_ref_depths +', ' +gt_alt_depths +', ' + gt_quals +', ' + gt_copy_numbers+', ' + gt_phred_ll_homref+', ' +gt_phred_ll_het+', ' + gt_phred_ll_homalt+', ' + """\
-					g.gene, g.transcript_min_start, g.transcript_max_end
-					from variants_cnv v, gene_custom_map g
-					where (v.chrom ==  g.chrom
-					and g.transcript_min_start >= v.start
-					and g.transcript_max_end <= v.end)
-					or
-					(v.chrom ==  g.chrom
-					and g.transcript_min_start < v.start
-					and g.transcript_max_end > v.start)
-					or
-					(v.chrom ==  g.chrom
-					and g.transcript_min_start < v.end
-					and g.transcript_max_end > v.end)
-					order by v.chrom,v.start"""
-	else :
-		gt_filter = None
-		sel_sample = sample_name(database = args.db)
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, \
-					(gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
-					(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*), \
-		 			g.gene, g.transcript_min_start, g.transcript_max_end \
-					from variants_cnv v, gene_custom_map g \
-					where (v.chrom ==  g.chrom \
-					and g.transcript_min_start >= v.start \
-					and g.transcript_max_end <= v.end) \
-					or \
-					(v.chrom ==  g.chrom \
-					and g.transcript_min_start < v.start \
-					and g.transcript_max_end > v.start) \
-					or \
-					(v.chrom ==  g.chrom \
-					and g.transcript_min_start < v.end \
-					and g.transcript_max_end > v.end) \
-					order by v.chrom,v.start"""
+	query_custom,gt_filter,sel_sample = _query_custom(args)
 
 	res = GeminiQuery.GeminiQuery(args.db)
 	res.run(query_custom,gt_filter)
@@ -366,7 +328,7 @@ def overlap_custom_gene(args):
 	for row in res:
 		over_perc = perc_over(row)
 		gene.append(str(row['gene']))
-		alt = extract_data(alt,row,sel_sample,smp2idx)
+		alt = _extract_data(alt,row,sel_sample,smp2idx)
 		record = dict(variant_id = row["variant_id"],
 					chrom = str(row["chrom"]),
 					type = str(row["type"]),
@@ -416,58 +378,8 @@ def overlap_custom_gene_browser(args):
 
 	result = []
 
-	if args.sample:
-		sel_sample = args.sample.split(',')
-		gts = 'gts.' + ', gts.'.join([str(s) for s in sel_sample])
-		gt_types = 'gt_types.' + ', gt_types.'.join([str(s) for s in sel_sample])
-		gt_phases = 'gt_phases.' + ', gt_phases.'.join([str(s) for s in sel_sample])
-		gt_depths = 'gt_depths.' + ', gt_depths.'.join([str(s) for s in sel_sample])
-		gt_ref_depths = 'gt_ref_depths.' + ', gt_ref_depths.'.join([str(s) for s in sel_sample])
-		gt_alt_depths = 'gt_alt_depths.' + ', gt_alt_depths.'.join([str(s) for s in sel_sample])
-		gt_quals = 'gt_quals.' + ', gt_quals.'.join([str(s) for s in sel_sample])
-		gt_copy_numbers = 'gt_copy_numbers.' + ', gt_copy_numbers.'.join([str(s) for s in sel_sample])
-		gt_phred_ll_homref = 'gt_phred_ll_homref.' + ', gt_phred_ll_homref.'.join([str(s) for s in sel_sample])
-		gt_phred_ll_het = 'gt_phred_ll_het.' + ', gt_phred_ll_het.'.join([str(s) for s in sel_sample])
-		gt_phred_ll_homalt = 'gt_phred_ll_homalt.' + ', gt_phred_ll_homalt.'.join([str(s) for s in sel_sample])
-
-		gt_filter  = " != './.' or".join([s for s in gts.split(',')]) + " != './.' "
-		query = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, \
-					""" + gts +', ' + gt_types +', ' + gt_phases +', ' +gt_depths +', ' + gt_ref_depths +', ' +gt_alt_depths +', ' + gt_quals +', ' + gt_copy_numbers+', ' + gt_phred_ll_homref+', ' +gt_phred_ll_het+', ' + gt_phred_ll_homalt+', ' + """\
-					g.gene, g.transcript_min_start, g.transcript_max_end
-					from variants_cnv v, gene_custom_map g
-					where (v.chrom ==  g.chrom
-					and g.transcript_min_start >= v.start
-					and g.transcript_max_end <= v.end)
-					or
-					(v.chrom ==  g.chrom
-					and g.transcript_min_start < v.start
-					and g.transcript_max_end > v.start)
-					or
-					(v.chrom ==  g.chrom
-					and g.transcript_min_start < v.end
-					and g.transcript_max_end > v.end)
-					order by v.chrom,v.start"""
-	else :
-		gt_filter = None
-		sel_sample = sample_name(database = args.db)
-		query_custom = """SELECT v.variant_id, v.chrom, v.type, v.sub_type, v.alt, v.sv_length, v.start, v.end, \
-					(gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
-					(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*), \
-					g.gene, g.transcript_min_start, g.transcript_max_end \
-					from variants_cnv v, gene_custom_map g \
-					where (v.chrom ==  g.chrom \
-					and g.transcript_min_start >= v.start \
-					and g.transcript_max_end <= v.end) \
-					or \
-					(v.chrom ==  g.chrom \
-					and g.transcript_min_start < v.start \
-					and g.transcript_max_end > v.start) \
-					or \
-					(v.chrom ==  g.chrom \
-					and g.transcript_min_start < v.end \
-					and g.transcript_max_end > v.end)\
-					order by v.chrom,v.start"""
-
+	query_custom,gt_filter,sel_sample = _query(args)
+	
 	res = GeminiQuery.GeminiQuery(args.db)
 	res._set_gemini_browser(True)
 	res.run(query_custom,gt_filter)
@@ -496,7 +408,7 @@ def overlap_custom_gene_browser(args):
 
 	return gene, alt, result
 
-def sample_name(database):
+def _sample_name(database):
 	names = []
 	query = "SELECT name FROM samples"
 	name = GeminiQuery.GeminiQuery(database)
