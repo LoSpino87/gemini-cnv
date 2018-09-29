@@ -15,6 +15,16 @@ import GeminiQuery
 import database
 import dgv_table
 import export_vcf
+from compression import pack_blob
+
+def _sample_name(database):
+	names = []
+	query = "SELECT name FROM samples"
+	name = GeminiQuery.GeminiQuery(database)
+	name.run(query)
+	for n in name:
+		names.append(str(n))
+	return names
 
 # get variants from cnv map file
 def get_dgv_map(args):
@@ -85,12 +95,15 @@ def overlap_main(args):
 def extract_var(args):
 	# extract data from variants table and create relative BED object
 	if args.sample:
-		gt_col = 'gts.' + ', gts.'.join([s for s in str(args.sample).split(',')])
-		gt_filter  = " != './.' or".join([s for s in gt_col.split(',')]) + " != './.' "
-		args.query = """select chrom, start, end, alt, """ + gt_col + """ from variants_cnv"""
+		sel_sample = args.sample.split(',')
+		gts = 'gts.' + ', gts.'.join([str(s) for s in sel_sample])
+		gt_filter  = " != './.' or".join([s for s in gts.split(',')]) + " != './.' "
+
+		args.query = """select chrom, start, end, alt, variant_id,""" + gts + """from variants_cnv"""
 	else :
 		gt_filter = None
-		args.query = 'select chrom, start, end, alt from variants_cnv'
+		sel_sample = _sample_name(database = args.db)
+		args.query = """select chrom, start, end, alt, variant_id,(gts).(*) from variants_cnv"""
 
 	VAR = GeminiQuery.GeminiQuery(args.db)
 	VAR.run(args.query,gt_filter)
@@ -175,18 +188,53 @@ def overlap(args,var_bed,cnv_bed):
 	#show result
 	var_and_cnv_b = []
 	for row in var_and_cnv:
-		inter_overlap = int(row[18])+1
-		length_A = int(row[2])-int(row[1])+1
-		length_B = int(row[6])-int(row[5])+1
-		perc_A = str(round(float(inter_overlap)/length_A*100,1))
-		if perc_A == '100.0': perc_A = '100'
-		if perc_A == '0.0': perc_A = '<0.1'
-		perc_B = str(round(float(inter_overlap)/length_B*100,1))
-		if perc_B == '100.0': perc_B = '100'
-		if perc_B == '0.0': perc_B = '<0.1'
-		j_index = jaccard_index(inter_overlap,length_A,length_B)
+		query_gen = "SELECT (gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
+				(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*) \
+				from variants_cnv v where v.variant_id=={0}".format(str(row[4]))
+		geno = GeminiQuery.GeminiQuery(args.db)
+		geno.run(query_gen)
+		for v in geno:
+			over_res = dict(chrom_A=row[0],
+							start_A=int(row[1]),
+							end_A=int(row[2]),
+							alt=row[3],
+							gts=pack_blob(v['gts']),
+							gt_types = pack_blob(v['gt_types']),
+							gt_phases = pack_blob(v['gt_phases']) ,
+		                    gt_depths=pack_blob(v['gt_depths']),
+							gt_ref_depths=pack_blob(v['gt_ref_depths']),
+		                    gt_alt_depths=pack_blob(v['gt_alt_depths']),
+		                    gt_quals=pack_blob(v['gt_quals']),
+							gt_copy_numbers=pack_blob(v['gt_copy_numbers']),
+							gt_phred_ll_homref=pack_blob(v['gt_phred_ll_homref']),
+							gt_phred_ll_het=pack_blob(v['gt_phred_ll_het']),
+							gt_phred_ll_homalt=pack_blob(v['gt_phred_ll_homalt']),
+							chrom_B = row[-15],
+							start_B = int(row[-14]),
+							end_B = int(row[-13]),
+							type = row[-12],
+							num_variants = row[-11],
+							num_samples = row[-10],
+							African = row[-9],
+							Asian = row[-8],
+							European = row[-7],
+							Mexican = row[-6],
+							Middle_east = row[-5],
+							Native_american = row[-4],
+							Oceania = row[-3],
+							South_american= row[-2],
+							overlap_bp = int(row[-1])+1,
+							len_A = int(row[2])-int(row[1])+1,
+							len_B = int(row[-13])-int(row[-14])+1,
+							overlap_A_perc = str(round(float(int(row[-1])+1)/(int(row[2])-int(row[1])+1)*100,1)),
+							overlap_B_perc = str(round(float(int(row[-1])+1)/(int(row[-13])-int(row[-14])+1)*100,1)))
 
-		var_and_cnv_b.append([row[0],row[1],row[2],length_A,perc_A,row[3],row[4],row[5],row[6],length_B,perc_B,row[7],inter_overlap,j_index,row[8],row[9],row[10],row[11],row[12],row[13],row[14],row[15],row[16],row[17]])
+			if over_res['overlap_A_perc'] == '100.0': over_res['overlap_A_perc'] = '100'
+			if over_res['overlap_A_perc'] == '0.0': over_res['overlap_A_perc'] = '<0.1'
+			if over_res['overlap_B_perc'] == '100.0': over_res['overlap_B_perc'] = '100'
+			if over_res['overlap_B_perc'] == '0.0': over_res['overlap_B_perc'] = '<0.1'
+			over_res['jaccard_index'] = jaccard_index(over_res['overlap_bp'],over_res['len_A'],over_res['len_B'])
+			var_and_cnv_b.append(over_res)
 
 	# length filter
 	if args.int_len_min or args.int_len_max:
@@ -200,7 +248,8 @@ def overlap(args,var_bed,cnv_bed):
 	id = 0
 	for r in var_and_cnv_b:
 		id += 1
-		overlap_result.append([id,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11],r[12],r[13],r[14],r[15],r[16],r[17],r[18],r[19],r[20],r[21],r[22],r[23]])
+		r['uid']=id
+		overlap_result.append(r)
 
 	e = sql.create_engine(database.get_path(args.db), isolation_level=None)
 	e.connect().connection.connection.text_factory = str
@@ -225,19 +274,45 @@ def overlap_custom(args,var_bed,cnv_bed):
 
 	#show result
 	var_and_cnv_b = []
-
 	for row in var_and_cnv:
-		inter_overlap = int(row[8])+1
-		length_A = int(row[2])-int(row[1])+1
-		length_B = int(row[6])-int(row[5])+1
-		perc_A = str(round(float(inter_overlap)/length_A*100,1))
-		if perc_A == '100.0': perc_A = '100'
-		if perc_A == '0.0': perc_A = '<0.1'
-		perc_B = str(round(float(inter_overlap)/length_B*100,1))
-		if perc_B == '100.0': perc_B = '100'
-		if perc_B == '0.0': perc_B = '<0.1'
-		j_index = jaccard_index(inter_overlap,length_A,length_B)
-		var_and_cnv_b.append([row[0],row[1],row[2],length_A,perc_A,row[3],row[4],row[5],row[6],length_B,perc_B,row[7],inter_overlap,j_index])
+		query_gen = "SELECT (gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
+				(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*) \
+				from variants_cnv v where v.variant_id=={0}".format(row[4])
+		geno = GeminiQuery.GeminiQuery(args.db)
+		geno.run(query_gen)
+		for v in geno:
+			over_res = dict(chrom_A=row[0],
+							start_A=int(row[1]),
+							end_A=int(row[2]),
+							alt=row[3],
+							gts=pack_blob(v['gts']),
+							gt_types = pack_blob(v['gt_types']),
+							gt_phases = pack_blob(v['gt_phases']) ,
+		                    gt_depths=pack_blob(v['gt_depths']),
+							gt_ref_depths=pack_blob(v['gt_ref_depths']),
+		                    gt_alt_depths=pack_blob(v['gt_alt_depths']),
+		                    gt_quals=pack_blob(v['gt_quals']),
+							gt_copy_numbers=pack_blob(v['gt_copy_numbers']),
+							gt_phred_ll_homref=pack_blob(v['gt_phred_ll_homref']),
+							gt_phred_ll_het=pack_blob(v['gt_phred_ll_het']),
+							gt_phred_ll_homalt=pack_blob(v['gt_phred_ll_homalt']),
+							chrom_B = row[-5],
+							start_B = int(row[-4]),
+							end_B = int(row[-3]),
+							opt_field = row[-2],
+							overlap_bp = int(row[-1])+1,
+							len_A = int(row[2])-int(row[1])+1,
+							len_B = int(row[-3])-int(row[-4])+1,
+							overlap_A_perc = str(round(float(int(row[-1])+1)/(int(row[2])-int(row[1])+1)*100,1)),
+							overlap_B_perc = str(round(float(int(row[-1])+1)/(int(row[-3])-int(row[-4])+1)*100,1)))
+
+
+			if over_res['overlap_A_perc'] == '100.0': over_res['overlap_A_perc'] = '100'
+			if over_res['overlap_A_perc'] == '0.0': over_res['overlap_A_perc'] = '<0.1'
+			if over_res['overlap_B_perc'] == '100.0': over_res['overlap_B_perc'] = '100'
+			if over_res['overlap_B_perc'] == '0.0': over_res['overlap_B_perc'] = '<0.1'
+			over_res['jaccard_index'] = jaccard_index(over_res['overlap_bp'],over_res['len_A'],over_res['len_B'])
+			var_and_cnv_b.append(over_res)
 
 	# length filter
 	if args.int_len_min or args.int_len_max:
@@ -249,10 +324,10 @@ def overlap_custom(args,var_bed,cnv_bed):
 	# insert id for each row of table
 	overlap_custom_result = []
 	id = 0
-
 	for r in var_and_cnv_b:
 		id += 1
-		overlap_custom_result.append([id,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11],r[12],r[13]])
+		r['uid']=id
+		overlap_custom_result.append(r)
 
 	e = sql.create_engine(database.get_path(args.db), isolation_level=None)
 	e.connect().connection.connection.text_factory = str
@@ -278,7 +353,7 @@ def overlap_reciprocal(args,var_bed,cnv_bed):
 def overlap_filt_alt(args,result):
 	overlap_filt_a = []
 	for i in result:
-		if str(i[5]) == args.alt_par.upper():
+		if str(i['alt_A']) == args.alt_par.upper():
 			overlap_filt_a.append(i)
 	return overlap_filt_a
 
@@ -286,15 +361,15 @@ def overlap_filt_len(args,result):
 	overlap_filt_l = []
 	for i in result:
 		if args.int_len_min:
-			if i[12] > int(args.int_len_min):
+			if i['overlap_bp'] > int(args.int_len_min):
 				if args.int_len_max:
-					if i[12] < int(args.int_len_max):
+					if i['overlap_bp'] < int(args.int_len_max):
 						overlap_filt_l.append(i)
 				else:
 					overlap_filt_l.append(i)
 		else:
 			if args.int_len_max:
-				if i[12] < int(args.int_len_max):
+				if i['overlap_bp'] < int(args.int_len_max):
 					overlap_filt_l.append(i)
 			else:
 				overlap_filt_l.append(i)
@@ -314,19 +389,46 @@ def no_overlap(args,var_bed,cnv_bed):
 	else:
 		var_no_cnv = var_bed.intersect(cnv_bed, v = True)
 
-	overlap_result = []
-	id = 0
-	for r in var_no_cnv:
-		id += 1
-		len = int(r[2])-int(r[1])+1
-		overlap_result.append([id,r[0],r[1],r[2],len,r[3]])
+	var_no_cnv_b=[]
+	id=0
+	for row in var_no_cnv:
+		query_gen = "SELECT (gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
+				(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*) \
+				from variants_cnv v where v.variant_id=={0}".format(row[4])
+		geno = GeminiQuery.GeminiQuery(args.db)
+		geno.run(query_gen)
+		for v in geno:
+			over_res = dict(chrom=row[0],
+							start=int(row[1]),
+							end=int(row[2]),
+							alt=row[3],
+							gts=pack_blob(v['gts']),
+							gt_types = pack_blob(v['gt_types']),
+							gt_phases = pack_blob(v['gt_phases']) ,
+		                    gt_depths=pack_blob(v['gt_depths']),
+							gt_ref_depths=pack_blob(v['gt_ref_depths']),
+		                    gt_alt_depths=pack_blob(v['gt_alt_depths']),
+		                    gt_quals=pack_blob(v['gt_quals']),
+							gt_copy_numbers=pack_blob(v['gt_copy_numbers']),
+							gt_phred_ll_homref=pack_blob(v['gt_phred_ll_homref']),
+							gt_phred_ll_het=pack_blob(v['gt_phred_ll_het']),
+							gt_phred_ll_homalt=pack_blob(v['gt_phred_ll_homalt']))
+
+			over_res['len'] = over_res['end']-over_res['start']+1
+			var_no_cnv_b.append(over_res)
 
 	# length filter
 	if args.int_len_min or args.int_len_max:
-		overlap_result = no_overlap_filt_len(args=args,result=overlap_result)
+		var_no_cnv_b = no_overlap_filt_len(args=args,result=var_no_cnv_b)
 	# alteration filter
 	if args.alt_par:
-		overlap_result = overlap_filt_alt(args=args,result=overlap_result)
+		var_no_cnv_b = overlap_filt_alt(args=args,result=var_no_cnv_b)
+
+	overlap_result = []
+	for r in var_no_cnv_b:
+		id += 1
+		r['uid']=id
+		overlap_result.append(r)
 
 	e = sql.create_engine(database.get_path(args.db), isolation_level=None)
 	e.connect().connection.connection.text_factory = str
@@ -344,15 +446,15 @@ def no_overlap_filt_len(args,result):
 	overlap_filt_l = []
 	for i in result:
 		if args.int_len_min:
-			if i[4] > int(args.int_len_min):
+			if i['len'] > int(args.int_len_min):
 				if args.int_len_max:
-					if i[4] < int(args.int_len_max):
+					if i['len'] < int(args.int_len_max):
 						overlap_filt_l.append(i)
 				else:
 					overlap_filt_l.append(i)
 		else:
 			if args.int_len_max:
-				if i[4] < int(args.int_len_max):
+				if i['len'] < int(args.int_len_max):
 					overlap_filt_l.append(i)
 			else:
 				overlap_filt_l.append(i)
@@ -364,7 +466,7 @@ def run(parser, args):
 		if args.dgv_cnvmap or args.bed_cnvmap:
 			overlap_main(args)
 		else:
-			print 'There is no map laoded. Please select a cnv map from DGV (--dgv_cnvmap) or a BED (--bed).'
+			print 'There is no map loaded. Please select a cnv map from DGV (--dgv_cnvmap) or a BED (--bed).'
 
 # name utility for browser
 def name_dgv(database):

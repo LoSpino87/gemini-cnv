@@ -510,13 +510,13 @@ def create_overlap_result(cursor,metadata,args):
             sql.Column("end_A",sql.Integer),
             sql.Column("len_A",sql.Integer),
             sql.Column("overlap_A_perc", sql.TEXT),
-            sql.Column("alt_A",sql.TEXT),
+            sql.Column("alt",sql.TEXT),
             sql.Column("chrom_B",sql.TEXT),
             sql.Column("start_B",sql.Integer),
             sql.Column("end_B", sql.Integer),
             sql.Column("len_B", sql.Integer),
             sql.Column("overlap_B_perc", sql.TEXT),
-            sql.Column("type_B", sql.TEXT),
+            sql.Column("type", sql.TEXT),
             sql.Column("overlap_bp", sql.Integer),
             sql.Column("jaccard_index", sql.Float),
             sql.Column("num_variants", sql.Integer),
@@ -528,7 +528,18 @@ def create_overlap_result(cursor,metadata,args):
             sql.Column("Middle_east", sql.Integer),
             sql.Column("Native_american", sql.Integer),
             sql.Column("Oceania", sql.Integer),
-            sql.Column("South_american", sql.Integer)]
+            sql.Column("South_american", sql.Integer),
+            sql.Column("gts",sql.LargeBinary()),
+            sql.Column("gt_types",sql.LargeBinary()),
+            sql.Column("gt_phases",sql.LargeBinary()),
+            sql.Column("gt_depths",sql.LargeBinary()),
+            sql.Column("gt_ref_depths",sql.LargeBinary()),
+            sql.Column("gt_alt_depths",sql.LargeBinary()),
+            sql.Column("gt_quals",sql.LargeBinary()),
+            sql.Column("gt_copy_numbers",sql.LargeBinary()),
+            sql.Column("gt_phred_ll_homref",sql.LargeBinary()),
+            sql.Column("gt_phred_ll_het",sql.LargeBinary()),
+            sql.Column("gt_phred_ll_homalt",sql.LargeBinary())]
     t = sql.Table("overlap", metadata, *cols,extend_existing=True)
     t.drop(checkfirst=True)
     metadata.create_all(tables=[t])
@@ -540,7 +551,18 @@ def create_no_overlap_result(cursor,metadata,args):
             sql.Column("start", sql.Integer),
             sql.Column("end", sql.Integer),
             sql.Column("len",sql.Integer),
-            sql.Column("alt", sql.TEXT)
+            sql.Column("alt", sql.TEXT),
+            sql.Column("gts",sql.LargeBinary()),
+            sql.Column("gt_types",sql.LargeBinary()),
+            sql.Column("gt_phases",sql.LargeBinary()),
+            sql.Column("gt_depths",sql.LargeBinary()),
+            sql.Column("gt_ref_depths",sql.LargeBinary()),
+            sql.Column("gt_alt_depths",sql.LargeBinary()),
+            sql.Column("gt_quals",sql.LargeBinary()),
+            sql.Column("gt_copy_numbers",sql.LargeBinary()),
+            sql.Column("gt_phred_ll_homref",sql.LargeBinary()),
+            sql.Column("gt_phred_ll_het",sql.LargeBinary()),
+            sql.Column("gt_phred_ll_homalt",sql.LargeBinary())
             ]
     t = sql.Table("no_overlap", metadata, *cols,extend_existing=True)
     t.drop(checkfirst=True)
@@ -553,7 +575,7 @@ def create_overlap_custom_result(cursor, metadata, args):
             sql.Column("end_A",sql.Integer),
             sql.Column("len_A",sql.Integer),
             sql.Column("overlap_A_perc", sql.TEXT),
-            sql.Column("alt_A",sql.TEXT),
+            sql.Column("alt",sql.TEXT),
             sql.Column("chrom_B",sql.TEXT),
             sql.Column("start_B",sql.Integer),
             sql.Column("end_B", sql.Integer),
@@ -561,7 +583,17 @@ def create_overlap_custom_result(cursor, metadata, args):
             sql.Column("overlap_B_perc", sql.TEXT),
             sql.Column("opt_field",sql.TEXT),
             sql.Column("overlap_bp", sql.Integer),
-            sql.Column("jaccard_index", sql.Float)]
+            sql.Column("jaccard_index", sql.Float),sql.Column("gts",sql.LargeBinary()),
+            sql.Column("gt_types",sql.LargeBinary()),
+            sql.Column("gt_phases",sql.LargeBinary()),
+            sql.Column("gt_depths",sql.LargeBinary()),
+            sql.Column("gt_ref_depths",sql.LargeBinary()),
+            sql.Column("gt_alt_depths",sql.LargeBinary()),
+            sql.Column("gt_quals",sql.LargeBinary()),
+            sql.Column("gt_copy_numbers",sql.LargeBinary()),
+            sql.Column("gt_phred_ll_homref",sql.LargeBinary()),
+            sql.Column("gt_phred_ll_het",sql.LargeBinary()),
+            sql.Column("gt_phred_ll_homalt",sql.LargeBinary())]
     t = sql.Table('overlap_custom', metadata, *cols,extend_existing=True)
     t.drop(checkfirst=True)
     metadata.create_all(tables=[t])
@@ -746,22 +778,19 @@ def insert_cnv_map(session, metadata, cnvmap):
 def insert_overlap(session, metadata, overlap):
     """Populate overlap results"""
     t = metadata.tables['overlap']
-    cols = _get_cols(t)
-    session.execute(t.insert(), list(gen_map(cols, overlap)))
+    session.execute(t.insert(), list(overlap))
     session.commit()
 
 def insert_no_overlap(session, metadata, overlap):
     """Populate no overlap results"""
     t = metadata.tables['no_overlap']
-    cols = _get_cols(t)
-    session.execute(t.insert(), list(gen_map(cols, overlap)))
+    session.execute(t.insert(), list(overlap))
     session.commit()
 
 def insert_overlap_custom(session,metadata, overlap):
     """Populate overlap result from custom map"""
     t = metadata.tables['overlap_custom']
-    cols = _get_cols(t)
-    session.execute(t.insert(), list(gen_map(cols,overlap)))
+    session.execute(t.insert(), list(overlap))
     session.commit()
 
 def insert_gene_custom_map(session,metadata,gene_custom_map):
