@@ -340,7 +340,15 @@ def overlap_custom_gene(args):
 					gene = row["gene"],
 					transcript_min_start = row["transcript_min_start"],
 					transcript_max_end = row["transcript_max_end"],
-					perc = over_perc)
+					perc = over_perc,
+					gts=pack_blob(gts),
+					gt_types = pack_blob(row['gt_types']), gt_phases = pack_blob(row['gt_phases']) ,
+                    gt_depths=pack_blob(row['gt_depths']), gt_ref_depths=pack_blob(row['gt_ref_depths']),
+                    gt_alt_depths=pack_blob(row['gt_alt_depths']),
+                    gt_quals=pack_blob(row['gt_quals']), gt_copy_numbers=pack_blob(row['gt_copy_numbers']),
+					gt_phred_ll_homref=pack_blob(row['gt_phred_ll_homref']),
+					gt_phred_ll_het=pack_blob(row['gt_phred_ll_het']),
+					gt_phred_ll_homalt=pack_blob(row['gt_phred_ll_homalt']))
 
 		if args.perc_max and args.perc_min:
 			if float(args.perc_max) > over_perc and float(args.perc_min) < over_perc:
@@ -379,7 +387,7 @@ def overlap_custom_gene_browser(args):
 	result = []
 
 	query_custom,gt_filter,sel_sample = _query(args)
-	
+
 	res = GeminiQuery.GeminiQuery(args.db)
 	res._set_gemini_browser(True)
 	res.run(query_custom,gt_filter)
