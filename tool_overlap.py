@@ -190,7 +190,7 @@ def overlap(args,var_bed,cnv_bed):
 	for row in var_and_cnv:
 		query_gen = "SELECT (gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
 				(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*) \
-				from variants_cnv v where v.variant_id=={0}".format(str(row[4]))
+				from variants_cnv v where v.variant_id=={}".format(str(row[4]))
 		geno = GeminiQuery.GeminiQuery(args.db)
 		geno.run(query_gen)
 		for v in geno:
@@ -277,7 +277,7 @@ def overlap_custom(args,var_bed,cnv_bed):
 	for row in var_and_cnv:
 		query_gen = "SELECT (gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
 				(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*) \
-				from variants_cnv v where v.variant_id=={0}".format(row[4])
+				from variants_cnv v where v.variant_id=={}".format(row[4])
 		geno = GeminiQuery.GeminiQuery(args.db)
 		geno.run(query_gen)
 		for v in geno:
