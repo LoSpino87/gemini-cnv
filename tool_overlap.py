@@ -110,8 +110,7 @@ def extract_var(args):
 	var_string = ""
 	for i in VAR:
 		if args.sample:
-			i = "\t".join([x for x in str(i).split('\t')[:4]])
-			print i
+			i = "\t".join([x for x in str(i).split('\t')[:5]])
 
 		var_string = var_string + "\n" + str(i)
 
