@@ -109,6 +109,7 @@ def extract_var(args):
 	VAR.run(args.query,gt_filter)
 	var_string = ""
 	for i in VAR:
+		print i
 		if args.sample:
 			i = "\t".join([x for x in str(i).split('\t')[:4]])
 
@@ -188,7 +189,6 @@ def overlap(args,var_bed,cnv_bed):
 	#show result
 	var_and_cnv_b = []
 	for row in var_and_cnv:
-		print row
 		query_gen = "SELECT (gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
 				(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*) \
 				from variants_cnv v where v.variant_id=={}".format(str(row[4]))
