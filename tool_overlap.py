@@ -109,9 +109,9 @@ def extract_var(args):
 	VAR.run(args.query,gt_filter)
 	var_string = ""
 	for i in VAR:
-		print i
 		if args.sample:
 			i = "\t".join([x for x in str(i).split('\t')[:4]])
+			print i
 
 		var_string = var_string + "\n" + str(i)
 
