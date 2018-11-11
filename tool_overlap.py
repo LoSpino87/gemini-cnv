@@ -109,13 +109,13 @@ def extract_var(args):
 		gt_phred_ll_homalt = 'gt_phred_ll_homalt.' + ', gt_phred_ll_homalt.'.join([str(s) for s in sel_sample])
 		gt_filter  = " != './.' or".join([s for s in gts.split(',')]) + " != './.' "
 
-		args.query = """select chrom, start, end, alt, variant_id\
+		args.query = """select chrom, start, end, alt, variant_id,\
 					 """ + gts +', ' + gt_types +', ' + gt_phases +', ' +gt_depths +', ' + gt_ref_depths +', ' +gt_alt_depths +', ' + gt_quals +', ' + gt_copy_numbers+', ' + gt_phred_ll_homref+', ' +gt_phred_ll_het+', ' + gt_phred_ll_homalt+', ' + """\
 		 			 from variants_cnv"""
 	else :
 		gt_filter = None
 		sel_sample = _sample_name(database = args.db)
-		args.query = """select chrom, start, end, alt, variant_id\
+		args.query = """select chrom, start, end, alt, variant_id,\
 					(gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
 					(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*), \
 					from variants_cnv"""
