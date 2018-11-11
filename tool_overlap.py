@@ -97,28 +97,13 @@ def extract_var(args):
 	if args.sample:
 		sel_sample = args.sample.split(',')
 		gts = 'gts.' + ', gts.'.join([str(s) for s in sel_sample])
-		gt_types = 'gt_types.' + ', gt_types.'.join([str(s) for s in sel_sample])
-		gt_phases = 'gt_phases.' + ', gt_phases.'.join([str(s) for s in sel_sample])
-		gt_depths = 'gt_depths.' + ', gt_depths.'.join([str(s) for s in sel_sample])
-		gt_ref_depths = 'gt_ref_depths.' + ', gt_ref_depths.'.join([str(s) for s in sel_sample])
-		gt_alt_depths = 'gt_alt_depths.' + ', gt_alt_depths.'.join([str(s) for s in sel_sample])
-		gt_quals = 'gt_quals.' + ', gt_quals.'.join([str(s) for s in sel_sample])
-		gt_copy_numbers = 'gt_copy_numbers.' + ', gt_copy_numbers.'.join([str(s) for s in sel_sample])
-		gt_phred_ll_homref = 'gt_phred_ll_homref.' + ', gt_phred_ll_homref.'.join([str(s) for s in sel_sample])
-		gt_phred_ll_het = 'gt_phred_ll_het.' + ', gt_phred_ll_het.'.join([str(s) for s in sel_sample])
-		gt_phred_ll_homalt = 'gt_phred_ll_homalt.' + ', gt_phred_ll_homalt.'.join([str(s) for s in sel_sample])
 		gt_filter  = " != './.' or".join([s for s in gts.split(',')]) + " != './.' "
 
-		args.query = """select chrom, start, end, alt, variant_id, \
-					 """ + gts +', ' + gt_types +', ' + gt_phases +', ' +gt_depths +', ' + gt_ref_depths +', ' +gt_alt_depths +', ' + gt_quals +', ' + gt_copy_numbers+', ' + gt_phred_ll_homref+', ' +gt_phred_ll_het+', ' + gt_phred_ll_homalt+', ' + """\
-		 			 from variants_cnv"""
+		args.query = """select chrom, start, end, alt, variant_id,""" + gts + """from variants_cnv"""
 	else :
 		gt_filter = None
-		print 'sono qui'
 		sel_sample = _sample_name(database = args.db)
-		args.query = """select chrom, start, end, alt, variant_id, (gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
-					(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*), \
-					from variants_cnv"""
+		args.query = """select chrom, start, end, alt, variant_id,(gts).(*) from variants_cnv"""
 
 	VAR = GeminiQuery.GeminiQuery(args.db)
 	VAR.run(args.query,gt_filter)
