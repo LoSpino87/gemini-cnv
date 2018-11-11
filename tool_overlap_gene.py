@@ -329,6 +329,7 @@ def overlap_custom_gene(args):
 		over_perc = perc_over(row)
 		gene.append(str(row['gene']))
 		alt = _extract_data(alt,row,sel_sample,smp2idx)
+		gts = row['gts']
 		record = dict(variant_id = row["variant_id"],
 					chrom = str(row["chrom"]),
 					type = str(row["type"]),
