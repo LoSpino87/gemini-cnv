@@ -114,6 +114,7 @@ def extract_var(args):
 		 			 from variants_cnv"""
 	else :
 		gt_filter = None
+		print 'sono qui'
 		sel_sample = _sample_name(database = args.db)
 		args.query = """select chrom, start, end, alt, variant_id, (gts).(*), (gt_types).(*),(gt_phases).(*),(gt_depths).(*),(gt_ref_depths).(*),(gt_alt_depths).(*),\
 					(gt_quals).(*),(gt_copy_numbers).(*),(gt_phred_ll_homref).(*),(gt_phred_ll_het).(*),(gt_phred_ll_homalt).(*), \
